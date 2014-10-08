@@ -19,8 +19,8 @@ and Chef is now in control of the machine.  Or Salt, or whatever floats your boa
 ## Initial Setup
 
 - Fork or clone this repository.
-- Configure URLs to match your project. (See Configuration below)
-- Add your ezvm update procedure to the [local/update] directory.
+- Configure URLs to match your project. (See [Configuration](#configuration) below)
+- Add your ezvm update procedure to the [local/update](local/update) directory.
 
 ## Before Bootstrapping
 
@@ -111,7 +111,7 @@ The second, the `salt` update procedure, installs, configures and executes a sal
 ## Triggering a specific execution procedure
 
 Unless otherwise specified, [get-update-list](local/update/get-update-list) simply
-lists out the files in the [local/update] directory.
+lists out the files in the [local/update](local/update) directory.
 
 You can manage multiple update procedures by setting Google Compute metadata to tell
 it which specific procedure to execute.
@@ -169,7 +169,7 @@ gcloud compute --project "my-project" instances create "salt" --zone "us-central
 ```
 
 Notice the metadata `ezvm-updates=salt-master`, that is what causes it to run the
-update routines in [local/update/salt-master], which is what
+update routines in [local/update/salt-master](local/update/salt-master), which is what
 actually does the work.
 
 Without listing the "salt-master" directory in the "ezvm-updates" metadata, that directory

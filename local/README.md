@@ -17,12 +17,12 @@ run `sudo ezvm update` on your VM to debug your update procedure during developm
 
 ## lib.sh
 
-[lib.sh] is a set of common routines that you can/should use by your update scripts.
+[lib.sh](lib.sh) is a set of common routines that you can/should use by your update scripts.
 It's optional but recommended.  Look through there to see what the sub-routines do.
 
 ## self-update-hook
 
-[self-update-hook] is only really needed if you are developing/debugging your update procedure.
+[self-update-hook](self-update-hook) is only really needed if you are developing/debugging your update procedure.
 
 If you run `sudo ezvm update -s` then ezvm will update itself, including this, the
 contents of its ezvm-local directory.  It doesn't know how to update this directory,
