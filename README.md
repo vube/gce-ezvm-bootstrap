@@ -20,7 +20,7 @@ and Chef is now in control of the machine.  Or Salt, or whatever floats your boa
 
 - Fork or clone this repository.
 - Configure URLs to match your project. (See Configuration below)
-- Add your ezvm update procedure to the [local/update](browse/local/update) directory.
+- Add your ezvm update procedure to the [local/update] directory.
 
 ## Before Bootstrapping
 
@@ -65,7 +65,7 @@ Example: `gs://my-bucket-name/bootstrap.sh`
 
 Replace `__CONFIGURE_GS_BOOTSTRAP_URL__` in the following files:
 
-    - [publish.sh](browse/scripts/publish.sh)
+- [publish.sh](scripts/publish.sh)
 
 ## Bootstrap Archive URL
 
@@ -79,9 +79,9 @@ Example: `gs://my-bucket-name/bootstrap-update.tar.gz`
 
 Replace `__CONFIGURE_GS_ARCHIVE_URL__` in the following files:
 
-    - [bootstrap.sh](browse/scripts/bootstrap.sh)
-    - [local/lib.sh](browse/local/lib.sh)
-    - [publish.sh](browse/scripts/publish.sh)
+- [bootstrap.sh](scripts/bootstrap.sh)
+- [local/lib.sh](local/lib.sh)
+- [publish.sh](scripts/publish.sh)
 
 # Advanced Configuration
 
@@ -110,8 +110,8 @@ The second, the `salt` update procedure, installs, configures and executes a sal
 
 ## Triggering a specific execution procedure
 
-Unless otherwise specified, [get-update-list](browse/local/update/get-update-list) simply
-lists out the files in the [local/update](browse/local/update) directory.
+Unless otherwise specified, [get-update-list](local/update/get-update-list) simply
+lists out the files in the [local/update] directory.
 
 You can manage multiple update procedures by setting Google Compute metadata to tell
 it which specific procedure to execute.
@@ -168,8 +168,8 @@ To create a salt master, run this command:
 gcloud compute --project "my-project" instances create "salt" --zone "us-central1-a" --machine-type "n1-highcpu-1" --network "default" --metadata "startup-script-url=__CONFIGURE_GS_BOOTSTRAP_URL__" "ezvm-updates=salt-master" --maintenance-policy "MIGRATE" --scopes "https://www.googleapis.com/auth/userinfo.email" "https://www.googleapis.com/auth/compute" "https://www.googleapis.com/auth/devstorage.read_write" --image "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/backports-debian-7-wheezy-v20140904"
 ```
 
-Notice the metadata "ezvm-updates=salt-master", that is what causes it to run the
-update routines in [local/update/salt-master](local/update/salt-master), which is what
+Notice the metadata `ezvm-updates=salt-master`, that is what causes it to run the
+update routines in [local/update/salt-master], which is what
 actually does the work.
 
 Without listing the "salt-master" directory in the "ezvm-updates" metadata, that directory

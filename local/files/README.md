@@ -2,7 +2,7 @@
 
 ## saltstack.gpg
 
-`saltstack.gpg` is the SaltStack Debian packages public key.
+[saltstack.gpg] is the SaltStack Debian packages public key.
 
 I fetched it with the
 following command, feel free to update it if you feel the need:
@@ -11,4 +11,4 @@ following command, feel free to update it if you feel the need:
 
 Installation instructions (and that command) are [documented here](http://docs.saltstack.com/en/latest/topics/installation/debian.html).
 
-`saltstack.gpg` is used by [1000-saltstack-apt-sources](local/update/salt-master/1000-saltstack-apt-sources)
+`saltstack.gpg` is used by [1000-saltstack-apt-sources](../local/update/salt-master/1000-saltstack-apt-sources)
