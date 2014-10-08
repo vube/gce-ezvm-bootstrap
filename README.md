@@ -38,7 +38,7 @@ to be the URL of the bootstrap.sh script.
 ### Example VM creation command
 
 ```bash
-gcloud compute --project "my-project" instances create "my-instance" --zone "us-central1-a" --machine-type "n1-standard-1" --network "default" --metadata "startup-script-url=__CONFIGURE_GS_BOOTSTRAP_URL__" --maintenance-policy "MIGRATE" --scopes "https://www.googleapis.com/auth/userinfo.email" "https://www.googleapis.com/auth/compute" "https://www.googleapis.com/auth/devstorage.read_write" --image "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/backports-debian-7-wheezy-v20140904"
+gcloud compute --project "my-project" instances create "my-instance" --zone "us-central1-a" --machine-type "n1-highcpu-1" --network "default" --metadata "startup-script-url=__CONFIGURE_GS_BOOTSTRAP_URL__" --maintenance-policy "MIGRATE" --scopes "https://www.googleapis.com/auth/userinfo.email" "https://www.googleapis.com/auth/compute" "https://www.googleapis.com/auth/devstorage.read_write" --image "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/backports-debian-7-wheezy-v20140904"
 ```
 
 For the above command to work, you must replace the following settings with your own:
@@ -121,7 +121,7 @@ it which specific procedure to execute.
 For example, in this compute command
 
 ```bash
-gcloud compute --project "my-project" instances create "my-instance" --zone "us-central1-a" --machine-type "n1-standard-1" --network "default" --metadata "startup-script-url=__CONFIGURE_GS_BOOTSTRAP_URL__" --maintenance-policy "MIGRATE" --scopes "https://www.googleapis.com/auth/userinfo.email" "https://www.googleapis.com/auth/compute" "https://www.googleapis.com/auth/devstorage.read_write" --image "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/backports-debian-7-wheezy-v20140904"
+gcloud compute --project "my-project" instances create "my-instance" --zone "us-central1-a" --machine-type "n1-highcpu-1" --network "default" --metadata "startup-script-url=__CONFIGURE_GS_BOOTSTRAP_URL__" --maintenance-policy "MIGRATE" --scopes "https://www.googleapis.com/auth/userinfo.email" "https://www.googleapis.com/auth/compute" "https://www.googleapis.com/auth/devstorage.read_write" --image "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/backports-debian-7-wheezy-v20140904"
 ```
 
 The significant element of the command is the metadata, like
@@ -154,3 +154,27 @@ For example:
 
 The above will install global updates first, then salt and then chef.  You probably don't want to install
 both chef and salt, but you get the idea how it works.
+
+# Functional Example
+
+As a functional example I've included an update procedure to install a salt master server.
+Once you have the master up and running, it's pretty easy to have it create minions, so
+there isn't any real value in using ezvm for that.  But creating the master takes a few
+steps, and this automates it.
+
+To create a salt master, run this command:
+
+```bash
+gcloud compute --project "my-project" instances create "salt" --zone "us-central1-a" --machine-type "n1-highcpu-1" --network "default" --metadata "startup-script-url=__CONFIGURE_GS_BOOTSTRAP_URL__" "ezvm-updates=salt-master" --maintenance-policy "MIGRATE" --scopes "https://www.googleapis.com/auth/userinfo.email" "https://www.googleapis.com/auth/compute" "https://www.googleapis.com/auth/devstorage.read_write" --image "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/backports-debian-7-wheezy-v20140904"
+```
+
+Notice the metadata "ezvm-updates=salt-master", that is what causes it to run the
+update routines in [local/update/salt-master](local/update/salt-master), which is what
+actually does the work.
+
+Without listing the "salt-master" directory in the "ezvm-updates" metadata, that directory
+would have been ignored and no salt master would have been installed.
+
+Note: That is a 1-core machine, you probably don't want to use that for an actual
+production server.  Change the machine-type to a beefier machine if you are using a large
+installation.
