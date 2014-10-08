@@ -1,18 +1,19 @@
-GCE ezvm Bootstrap
+gce [ezvm](https://github.com/vube/ezvm) bootstrap
 ==================
 
-Bootstrap a Google Compute Engine VM with ezvm
+Bootstrap a Google Compute Engine VM with [ezvm](https://github.com/vube/ezvm)
 
 Why do this?  Well say you use SaltStack, Ansible, Chef or Puppet.  You need to install
 those on the new VM image before you can actually use them right?
 
-ezvm is a painless way to make that happen.  Just drop in your update files to `local/update`
-and when you create the VM you bootstrap it with `bootstrap.sh`.  When the VM boots, it
+ezvm is a painless way to make that happen.  Just drop your update files in to the
+[local/update](local/update) directory
+and when you create the VM you bootstrap it with [bootstrap.sh](scripts/bootstrap.sh).  When the VM boots, it
 runs your update procedure.
 
 The last step of your update procedure should be running your node management software,
 so fire up chef-client or whatever you want.  At that point, ezvm is out of the picture
-and Chef is now in control of the machine.  Or Salt, or whatever floats your boat.
+and Salt is now in control of the machine.  Or Chef, or whatever floats your boat.
 
 # Usage
 
@@ -21,14 +22,19 @@ and Chef is now in control of the machine.  Or Salt, or whatever floats your boa
 - Fork or clone this repository.
 - Configure URLs to match your project. (See [Configuration](#configuration) below)
 - Add your ezvm update procedure to the [local/update](local/update) directory.
+- Publish your update procedure (see [Before Bootstrapping](#before-bootstrapping) below)
 
-## Before Bootstrapping
+### Before Bootstrapping
 
-IF you have changed the update procedure, on your local workstation, run
+If you have changed the update procedure, on your local workstation, run
 
 ```bash
 user@workstation:~/gce-ezvm-bootstrap$ scripts/publish.sh
 ```
+
+You only need to do this after changing your update procedure.  This command stores
+your update procedure in Google Storage where it will stay for all new VM instances
+to use when they come online.
 
 ## Each time you create a new VM instance
 
