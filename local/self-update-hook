@@ -1,0 +1,49 @@
+#!/bin/sh
+#
+# This self-update-hook gets executed IF and only IF you run `ezvm selfupdate`
+# or `ezvm update -s`
+#
+# Generally this will not be run except when you are manually debugging
+# your local update rules.  On production systems you can remove this
+# file if you prefer.
+#
+# This runs AFTER ezvm has updated itself but BEFORE the new ezvm code
+# takes effect.  You shouldn't really care about that unless you're
+# a developer working on ezvm.
+#
+
+######################################################################
+# BEGIN CONFIGURATION SECTION
+######################################################################
+
+GS_EZVM_LOCAL_ARCHIVE="__CONFIGURE_GS_ARCHIVE_URL__"
+
+######################################################################
+# END CONFIGURATION SECTION
+######################################################################
+
+
+# Get absolute path to current directory name
+LOCAL_DIR="$(cd "$(dirname "$0")" > /dev/null; pwd)"
+
+. "$LOCAL_DIR/lib.sh"
+
+
+# Create a temporary file and copy the ezvm-local build to that temp file
+# The temp file MUST be located in the system temp directory, NOT in current dir,
+# or this process will probably nuke your ability to do local updates.
+tempf=$(mktemp -t ezvm-local.XXXXX)
+gsutil cp "$GS_EZVM_LOCAL_ARCHIVE" "$tempf" || fatal 1 "Failed to copy ezvm-local archive: $GS_EZVM_LOCAL_ARCHIVE"
+
+# AFTER we downloaded the new archive successfully
+# Remove all files under the current ezvm/etc/local directory
+change_dir "$LOCAL_DIR"
+sudo rm -rf * || fatal $? "Error removing files"
+
+# Now copy the new archive into the current dir
+file=$(basename "$GS_EZVM_LOCAL_ARCHIVE")
+sudo mv "$tempf" "$file" || fatal 1 "Error moving ezvm-local archive to $(pwd)/$file"
+
+# Unzip the new archive then delete the archive itself
+sudo tar -zxf "$file" || fatal 1 "Error unpacking ezvm-local archive"
+sudo rm -f "$file"

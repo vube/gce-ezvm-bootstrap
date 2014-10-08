@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+# This OPTIONAL file returns a list of all of the update scripts
+# to run, in the order you want to run them.
+#
+# This gets executed from the $EZVM_LOCAL_UPDATE_DIR directory
+# (by default etc/local/update)
+#
+# In this example implementation, we simply return the default
+# list of all files in sorted order.
+#
+
+. "$(dirname "$0")/../lib.sh" || { echo "Cannot include ../lib.sh" 1>&2; exit 1; }
+
+# Get the server role
+# If this fails get_metadata_attribute prints error info so we just need to exit with the failure code
+ezvm_updates=$(get_metadata_attribute "ezvm-updates")
+r=$?
+case $r in
+    22) ;; # This is a 404 error, as in the metadata doesn't exist; no problem.
+    0) ;; # Success we got the metadata
+    *) fatal $r "Error querying metadata (code=$r)" ;;
+esac
+
+# List of update dirs must have associated setup routines
+for d in $ezvm_updates; do
+    [ -d "./$d" ] || fatal 2 "Invalid ezvm-updates dir: $d"
+done
+
+# First thing we do is anything that's truly global
+# DO NOT include get-update-list (this script) in the output
+find . -maxdepth 1 -type f -print | sort | grep -v "^$(basename $0)\$"
+
+# Only execute role-specific update procedure
+# They are listed in the "$dir/" sub-directory
+#
+# List these in the same order that they're specified in ezvm-updates
+#
+for d in $ezvm_updates; do
+    find "./$d" -type f -print | sort
+done
