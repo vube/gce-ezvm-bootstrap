@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# 1098-apt-set-default-release
+#
+# Set wheezy as the default release on this system.
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+# Remove the cache file that the other 1xxx scripts will use to tell us
+# if something has changed requiring an `apt-get update`
+
+rm -f "$BUILD_DIR/apt.changes"
+
+[ -d "$BUILD_DIR" ] || install -d -m 0775 "$BUILD_DIR" || fatal $? "Cannot create build dir: $BUILD_DIR"

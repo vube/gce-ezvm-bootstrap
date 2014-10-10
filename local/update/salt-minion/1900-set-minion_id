@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# 1900-set-minion_id
+#
+# Write the /etc/salt/minion_id file, which we then expect will NOT be
+# overwritten when we install the package.
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+
+# Don't overwrite a file that already exists
+if [ ! -e /etc/salt/minion_id ]; then
+
+    # Create /etc/salt dir if needed
+    [ -d /etc/salt ] || sudo install -d -m 0755 -o root /etc/salt || fatal $? "Cannot create /etc/salt"
+
+    # The short hostname (e.g. "test" instead of "test.c.gce-salt-sandbox.internal")
+    temp=$(mktemp -t minion_id.XXX)
+    hostname -s > "$temp"
+    sudo mv "$temp" /etc/salt/minion_id || fatal $? "Failed to write /etc/salt/minion_id"
+    chmod 644 /etc/salt/minion_id
+    sudo chown root /etc/salt/minion_id
+
+fi

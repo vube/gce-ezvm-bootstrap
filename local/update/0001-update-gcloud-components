@@ -6,7 +6,7 @@
 # on them.  So we'll explicitly update.
 #
 
-. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+. "$(dirname "$0")/../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
 
 
 sudo gcloud components update -q || fatal $? "Failed to update gcloud components"

@@ -1,16 +1,16 @@
 #!/bin/sh
 #
-# 2000-install-salt-master
+# 2000-install-salt-minion
 #
 # Having already updated apt so it will install salt packages, we now install the
-# dependencies and the salt-master.
+# dependencies and the salt-minion.
 #
 
 . "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
 
 
-# Note: salt-master requires the backports version of python-zmq
+# Note: salt-minion requires the backports version of python-zmq
 install_package "python-zmq" "backports"
 
 # Install the master itself
-install_package "salt-master" "wheezy-saltstack"
+install_package "salt-minion" "wheezy-saltstack"

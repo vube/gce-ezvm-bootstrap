@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# 1000-saltstack-apt-sources
+# 1002-saltstack-apt-sources
 #
 # This script installs the saltstack PGP key and configures apt/sources.list.d
 # so that we can install packages from debian.saltstack.com
@@ -10,34 +10,21 @@
 
 . "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
 
-changed=0
-
 tmp="$(mktemp -t ezvm.XXXXXX)"
 
 # First thing, import the saltstack PGP key
-if ! sudo apt-key list | grep 'joehealy@gmail.com'; then
+if ! sudo apt-key list | grep 'joehealy@gmail.com' > /dev/null; then
     cat ../files/saltstack.gpg | sudo apt-key add - || fatal $? "Cannot add saltstack.gpg to apt"
-    changed=1
-fi
-
-# Set wheezy as the default release for this system
-if [ ! -e /etc/apt/apt.conf ]; then
-    echo 'APT::Default-Release "wheezy";' > "$tmp"
-    sudo install -o root -m 0644 "$tmp" /etc/apt/apt.conf || fatal $? "Cannot set default apt release"
-    changed=1
+    # Remember that we changed something
+    echo "saltstack.gpg" >> "$BUILD_DIR/apt.changes"
 fi
 
 # Add jessie sources as an option
 if [ ! -f /etc/apt/sources.list.d/saltstack.list ]; then
     echo "deb http://debian.saltstack.com/debian wheezy-saltstack main" > "$tmp"
     sudo install -o root -m 0644 "$tmp" /etc/apt/sources.list.d/saltstack.list || fatal $? "Cannot install saltstack apt sources"
-    changed=1
+    # Remember that we changed something
+    echo "saltstack sources" >> "$BUILD_DIR/apt.changes"
 fi
 
 rm -f "$tmp"
-
-# Rebuild sources list if we changed anything
-if [ x$changed = x1 ]; then
-    echo "Changed apt sources, updating apt"
-    sudo apt-get update -y || fatal $? "apt-get update failed"
-fi

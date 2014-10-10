@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# 1001-jessie-apt-sources
+#
+# python-libcloud on wheezy and wheezy-backports is seriously old.  We need jessie
+# packages to install it.
+#
+# When ezvm executes this script, the cwd is the local/update dir (e.g. ../)
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+tmp="$(mktemp -t ezvm.XXXXXX)"
+
+# Add jessie sources as an option
+if [ ! -f /etc/apt/sources.list.d/jessie.list ]; then
+    cat >> "$tmp" <<____EOF
+deb http://http.debian.net/debian jessie main
+deb-src http://http.debian.net/debian jessie main
+____EOF
+    sudo install -o root -m 0644 "$tmp" /etc/apt/sources.list.d/jessie.list || fatal $? "Cannot install jessie apt sources"
+    # Remember that we changed something
+    echo "jessie sources" >> "$BUILD_DIR/apt.changes"
+fi
+
+rm -f "$tmp"

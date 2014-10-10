@@ -1,0 +1,16 @@
+#!/bin/bash
+#
+# 1099-apt-update
+#
+# If anything has changed with our apt configuration, update it
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+# Rebuild sources list if we changed anything
+if [ -e "$BUILD_DIR/apt.changes" ]; then
+
+    echo "Changed apt sources, updating apt"
+    sudo apt-get update -y || fatal $? "apt-get update failed"
+
+fi

@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# 1000-install-python-packages
+#
+# Some packages are required on the minions, I'm not sure why these are not installed
+# by the salt-minion package...
+#
+# This must be run before install-salt-minion so these modules are available when
+# the salt-minion starts.
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+
+# Python apt modules
+install_package "python-apt"
+install_package "python-msgpack" "backports"
+install_package "debconf-utils" "backports"
