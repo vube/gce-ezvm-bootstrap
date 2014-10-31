@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# 5000-download-salt-bootstrap
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+curl -L https://bootstrap.saltstack.com > $BUILD_DIR/bootstrap-salt.sh || fatal $? "Download bootstrap-salt.sh failed"
+
+if ! diff -q ../files/bootstrap-salt.sh $BUILD_DIR/bootstrap-salt.sh > /dev/null; then
+    (
+    echo "######################################################################"
+    echo "######################################################################"
+    echo "####  WARNING: bootstrap-salt.sh may be outdated"
+    echo "####"
+    echo "#### The version of bootstrap-salt.sh that we are using does not match"
+    echo "#### the bootstrap.saltstack.com distribution.  It's possible our"
+    echo "#### version is out of date, or that bootstrap.saltstack.com has been"
+    echo "#### hacked."
+    echo "####"
+    echo "#### Please investigate; using outdated installers is probably bad."
+    echo "####"
+    echo "######################################################################"
+    echo "######################################################################"
+    ) 1>&2
+fi
+
+# Remove the downloaded one, which might be unsafe
+rm -f $BUILD_DIR/bootstrap-salt.sh

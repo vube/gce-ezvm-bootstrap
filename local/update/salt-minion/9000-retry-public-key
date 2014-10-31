@@ -14,7 +14,7 @@ IDENT=$(readlink -f $0)
 . "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
 
 
-# Put this in a sub-shell so the parent ezvm doesn't stop and wait for it
+# Put this in a backgrounded sub-shell so the parent ezvm doesn't stop and wait for it
 (
     while true; do
         echo "$IDENT: waiting for salt-minion log activity"
@@ -30,11 +30,19 @@ IDENT=$(readlink -f $0)
         temp=$(mktemp -t ezvm-salt-minion-fixup.XXXXXX)
         sudo tail -n 3 /var/log/salt/minion > $temp
 
+        # If the first line of the last 3 lines looks like this
         if head -n 1 $temp | grep -i '\[CRITICAL\] The Salt Master has rejected this minion' > /dev/null; then
+            # If the second line of the last 3 lines looks like this
             if head -n 2 $temp | tail -n 1 | grep -i '^To repair this issue' > /dev/null; then
+                # If the third line of the last 3 times looks like this
                 if tail -n 1 $temp | grep -i '^Or restart the Salt Master in open mode' > /dev/null; then
+
+                    # Then the salt-minion has died and we need to restart it
                     echo "$IDENT: found key rejected message in log, restarting salt-minion"
                     sudo /etc/init.d/salt-minion restart || fatal $? "Cannot restart salt-minion"
+
+                    # Loop around again and continue inspecting the log to see if we're still
+                    # locked out (and need another restart) or if we're OK now.
                     continue
                 fi
             fi
@@ -44,3 +52,4 @@ IDENT=$(readlink -f $0)
         break
     done
 ) &
+# Sub-shell is backgrounded, ezvm will continue on without waiting

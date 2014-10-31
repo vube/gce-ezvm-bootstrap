@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# 2010-install-salt-cloud
+#
+# Having already updated apt so it will install salt packages, we now install the
+# dependencies and the salt-cloud.
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+
+# [08.Oct.2014] libcloud is currently bugged for GCE,
+# so we cannot use this until they patch it.
+#install_package "python-libcloud"
+
+# [08.Oct.2014] For now install pip and use it to install the development version
+# of libcloud, which though less stable over time, actually works for now.
+install_package "git"
+[ -d "$BUILD_DIR" ] || install -d -m 0775 "$BUILD_DIR" || fatal $? "Cannot create build dir: $BUILD_DIR"
+cd "$BUILD_DIR" || fatal $? "Cannot cd to build dir: $BUILD_DIR"
+sudo pip install -e git+https://git-wip-us.apache.org/repos/asf/libcloud.git@trunk#egg=apache-libcloud || fatal $? "Cannot install devel version of libcloud"
+
+# Install salt-cloud itself
+install_package "salt-cloud" "wheezy-saltstack"

@@ -1,0 +1,16 @@
+#!/bin/bash
+#
+# 2010-update-jinja2
+#
+# GCE has an old version of Jinja2 installed, so update it
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+
+# python-dev package is required for "fast jinja templates",
+# e.g. it compiles a C extension for template parsing.
+# This is optional but recommended.
+install_package "python-dev"
+
+sudo pip install --upgrade Jinja2 || fatal $? "Cannot upgrade Jinja2"

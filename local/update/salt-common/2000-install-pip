@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+# 2000-install-pip
+#
+# GCE has an old version of Jinja2 installed, so update it
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+
+install_package "python-pip"
