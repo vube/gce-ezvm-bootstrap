@@ -1,0 +1,23 @@
+#
+# gce-ezvm-bootstrap configuration
+#
+# You should copy this file to a file in the same directory named
+# 'configuration'  (no quotes)
+#
+# Modify these settings to match your environment.
+#
+# At the very least, you want to change 'your-bucket-name' to whatever
+# your cloud storage bucket is named.
+#
+# You probably also want to put these under some sub-directory in
+# there, but that's up to you.
+#
+# scripts/publish.sh will copy files TO these locations.
+#
+# scripts/bootstrap.sh will copy files FROM these locations.
+# local/self-update-hook will copy files FROM these locations.
+#
+
+GS_EZVM_LOCAL_ARCHIVE="gs://your-bucket-name/archive.tar.gz"
+
+GS_BOOTSTRAP_SH="gs://your-bucket-name/bootstrap.sh"

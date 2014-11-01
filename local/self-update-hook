@@ -12,21 +12,25 @@
 # a developer working on ezvm.
 #
 
-######################################################################
-# BEGIN CONFIGURATION SECTION
-######################################################################
-
-GS_EZVM_LOCAL_ARCHIVE="__CONFIGURE_GS_ARCHIVE_URL__"
-
-######################################################################
-# END CONFIGURATION SECTION
-######################################################################
-
-
 # Get absolute path to current directory name
 LOCAL_DIR="$(cd "$(dirname "$0")" > /dev/null; pwd)"
 
 . "$LOCAL_DIR/lib.sh"
+
+
+if [ ! -e $LOCAL_DIR/configuration ]; then
+    fatal 1 "CONFIG: You did not create the configuration file: $LOCAL_DIR/configuration"
+fi
+
+. $LOCAL_DIR/configuration || fatal 2 "CONFIG: Cannot read $LOCAL_DIR/configuration"
+
+if [ -z "$GS_EZVM_LOCAL_ARCHIVE" -o "$GS_EZVM_LOCAL_ARCHIVE" = "__CONFIGURE_GS_ARCHIVE_URL__" ]; then
+    fatal 3 "CONFIG: You did not configure GS_EZVM_LOCAL_ARCHIVE in $LOCAL_DIR/configuration"
+fi
+
+if [ -z "$GS_BOOTSTRAP_SH" -o "$GS_BOOTSTRAP_SH" = "__CONFIGURE_GS_BOOTSTRAP_URL__" ]; then
+    fatal 3 "CONFIG: You did not configure GS_BOOTSTRAP_SH in $LOCAL_DIR/configuration"
+fi
 
 
 # Create a temporary file and copy the ezvm-local build to that temp file
