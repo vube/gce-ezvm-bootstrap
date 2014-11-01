@@ -40,10 +40,10 @@ archive=$(basename "$GS_EZVM_LOCAL_ARCHIVE")
 
 echo "# Building bootstrap.sh"
 
-cat scripts/bootstrap.sh \
+cat $BASE_DIR/scripts/bootstrap.sh \
     | sed -e "s,__CONFIGURE_GS_ARCHIVE_URL__,$GS_EZVM_LOCAL_ARCHIVE,g" \
     | sed -e "s,__CONFIGURE_GS_BOOTSTRAP_URL__,$GS_BOOTSTRAP_SH,g" \
-    > build/bootstrap.sh \
+    > $BASE_DIR/build/bootstrap.sh \
     || fatal $? "Failed to customize bootstrap.sh"
 
 
@@ -61,7 +61,7 @@ cd "$BASE_DIR/local" || fatal $? "cd $BASE_DIR/local failed"
 ###
 EOF
 cat $BASE_DIR/configuration
-) > ./configuration || fatal $? "Cannot copy configuration"
+) > $BASE_DIR/local/configuration || fatal $? "Cannot copy configuration"
 
 # Now zip up the archive, including the copied configuration file
 tar -czf "$BASE_DIR/build/$archive" * || fatal $? "Create $archive failed"
