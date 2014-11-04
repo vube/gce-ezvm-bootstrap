@@ -9,6 +9,15 @@ We must periodically update this to ensure we're installing Salt correctly.  The
 install Salt from packages, but that doesn't work very well since it is under active development and
 the packages are often outdated.
 
+### Download latest bootstrap-salt.sh
+
+```bash
+$ curl -L https://bootstrap.saltstack.com -o bootstrap-salt.sh
+```
+
+Execute the above command in the same directory as this README.md resides, check the changes to
+make sure it looks legit, and commit.
+
 ## saltstack.gpg
 
 [saltstack.gpg](saltstack.gpg) is the SaltStack Debian packages public key.
