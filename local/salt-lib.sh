@@ -9,6 +9,15 @@ install_salt() {
     flags="-i $(hostname -s) -n -G"
     version="git v2014.1.13"
 
+    # Here we tell salt to fully Upgrade (-U) the system
+    # and to use PIP (-P) to install dependencies.
+    #
+    # This is required on Debian so we can get ZMQ 3.x which is required
+    # to have stable minions.  If/when ZMQ 3.x is backported to wheezy then
+    # we don't need to do this anymore.
+    #
+    flags="$flags -U -P"
+
     sudo sh ../files/bootstrap-salt.sh $flags $extraFlags $version || fatal $? "bootstrap-salt.sh failed"
 }
 
