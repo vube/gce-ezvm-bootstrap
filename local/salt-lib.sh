@@ -7,7 +7,8 @@ install_salt() {
 
     extraFlags="${1:-}"
     flags="-i $(hostname -s) -n -G"
-    version="git v2014.1.13"
+#    version="git v2014.1.13"
+    version="git v2014.7.0rc7"
 
     # Here we tell salt to fully Upgrade (-U) the system
     # and to use PIP (-P) to install dependencies.
