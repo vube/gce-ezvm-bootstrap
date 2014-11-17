@@ -449,7 +449,7 @@ if [ "${CALLER}x" = "${0}x" ]; then
 fi
 
 echoinfo "${CALLER} ${0} -- Version ${__ScriptVersion}"
-#echowarn "Running the unstable version of ${__ScriptName}"
+echowarn "Running the unstable version of ${__ScriptName}"
 
 #---  FUNCTION  -------------------------------------------------------------------------------------------------------
 #          NAME:  __exit_cleanup
@@ -987,11 +987,12 @@ __debian_derivatives_translation() {
     # If the file does not exist, return
     [ ! -f /etc/os-release ] && return
 
-    DEBIAN_DERIVATIVES="(kali)"
+    DEBIAN_DERIVATIVES="(kali|linuxmint)"
     # Mappings
     kali_1_debian_base="7.0"
+    linuxmint_1_debian_base="8.0"
 
-    # Detect derivates, Kali *only* for now
+    # Detect derivates, Kali and LinuxMint *only* for now
     rv=$(grep ^ID= /etc/os-release | sed -e 's/.*=//')
 
     # Translate Debian derivatives to their base Debian version
@@ -1002,6 +1003,10 @@ __debian_derivatives_translation() {
             kali)
                 _major=$(echo "$DISTRO_VERSION" | sed 's/^\([0-9]*\).*/\1/g')
                 _debian_derivative="kali"
+                ;;
+            linuxmint)
+                _major=$(echo "$DISTRO_VERSION" | sed 's/^\([0-9]*\).*/\1/g')
+                _debian_derivative="linuxmint"
                 ;;
         esac
 
@@ -1554,13 +1559,23 @@ __check_services_debian() {
     servicename=$1
     echodebug "Checking if service ${servicename} is enabled"
 
-    # shellcheck disable=SC2086,SC2046,SC2144
-    if [ -f /etc/rc$(runlevel | awk '{ print $2 }').d/S*${servicename} ]; then
-        echodebug "Service ${servicename} is enabled"
+    if [ "$(runlevel)" = "unknown" ]; then
+        # We're running in a Docker image that doesn't know the runlevel.
+        # In this event none of the /etc/init.d scripts will run anyway,
+        # which is the intended behavior.
+
+        # We don't need to check that ${servicename} is enabled.
+        echodebug "Skipping service ${servicename} enabled check (runlevel unknown)"
         return 0
     else
-        echodebug "Service ${servicename} is NOT enabled"
-        return 1
+        # shellcheck disable=SC2086,SC2046,SC2144
+        if [ -f /etc/rc$(runlevel | awk '{ print $2 }').d/S*${servicename} ]; then
+            echodebug "Service ${servicename} is enabled"
+            return 0
+        else
+            echodebug "Service ${servicename} is NOT enabled"
+            return 1
+        fi
     fi
 }   # ----------  end of function __check_services_debian  ----------
 
@@ -2919,11 +2934,6 @@ install_red_hat_linux_git_deps() {
     fi
     install_centos_git_deps || return 1
     return 0
-}
-
-install_red_hat_enterprise_linux_7_stable_deps() {
-    echoerror "Stable version is not available on RHEL 7 Beta/RC. Please set installation type to git."
-    return 1
 }
 
 install_red_hat_enterprise_linux_stable_deps() {
