@@ -11,6 +11,14 @@ the packages are often outdated.
 
 ### Download latest bootstrap-salt.sh
 
+Presently we're running a custom (bug fixed) version of bootstrap-salt.sh from:
+
+```bash
+$ curl -L https://raw.githubusercontent.com/xclusv/salt-bootstrap/develop/bootstrap-salt.sh -o bootstrap-salt.sh
+```
+
+Once that merges in, you can get the official release version from:
+
 ```bash
 $ curl -L https://bootstrap.saltstack.com -o bootstrap-salt.sh
 ```

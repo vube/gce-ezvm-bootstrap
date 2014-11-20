@@ -208,6 +208,7 @@ _SALT_MINION_ID="null"
 # __SIMPLIFY_VERSION is mostly used in Solaris based distributions
 __SIMPLIFY_VERSION=$BS_TRUE
 _LIBCLOUD_MIN_VERSION="0.14.0"
+_PY_REQUESTS_MIN_VERSION="2.4.3"
 _EXTRA_PACKAGES=""
 _HTTP_PROXY=""
 __SALT_GIT_CHECKOUT_DIR=${BS_SALT_GIT_CHECKOUT_DIR:-/tmp/git/salt}
@@ -243,7 +244,7 @@ usage() {
   -D  Show debug output.
   -c  Temporary configuration directory
   -g  Salt repository URL. (default: git://github.com/saltstack/salt.git)
-  -G  Insteady of cloning from git://github.com/saltstack/salt.git, clone from https://github.com/saltstack/salt.git (Usually necessary on systems which have the regular git protocol port blocked, where https usualy is not)
+  -G  Instead of cloning from git://github.com/saltstack/salt.git, clone from https://github.com/saltstack/salt.git (Usually necessary on systems which have the regular git protocol port blocked, where https usually is not)
   -k  Temporary directory holding the minion keys which will pre-seed
       the master.
   -s  Sleep time used when waiting for daemons to start, restart and when checking
@@ -449,7 +450,7 @@ if [ "${CALLER}x" = "${0}x" ]; then
 fi
 
 echoinfo "${CALLER} ${0} -- Version ${__ScriptVersion}"
-#echowarn "Running the unstable version of ${__ScriptName}"
+echowarn "Running the unstable version of ${__ScriptName}"
 
 #---  FUNCTION  -------------------------------------------------------------------------------------------------------
 #          NAME:  __exit_cleanup
@@ -987,11 +988,12 @@ __debian_derivatives_translation() {
     # If the file does not exist, return
     [ ! -f /etc/os-release ] && return
 
-    DEBIAN_DERIVATIVES="(kali)"
+    DEBIAN_DERIVATIVES="(kali|linuxmint)"
     # Mappings
     kali_1_debian_base="7.0"
+    linuxmint_1_debian_base="8.0"
 
-    # Detect derivates, Kali *only* for now
+    # Detect derivates, Kali and LinuxMint *only* for now
     rv=$(grep ^ID= /etc/os-release | sed -e 's/.*=//')
 
     # Translate Debian derivatives to their base Debian version
@@ -1002,6 +1004,10 @@ __debian_derivatives_translation() {
             kali)
                 _major=$(echo "$DISTRO_VERSION" | sed 's/^\([0-9]*\).*/\1/g')
                 _debian_derivative="kali"
+                ;;
+            linuxmint)
+                _major=$(echo "$DISTRO_VERSION" | sed 's/^\([0-9]*\).*/\1/g')
+                _debian_derivative="linuxmint"
                 ;;
         esac
 
@@ -1123,6 +1129,34 @@ __function_defined() {
     fi
     echodebug "$FUNC_NAME not found...."
     return 1
+}
+
+
+#---  FUNCTION  -------------------------------------------------------------------------------------------------------
+#          NAME:  __version_gte
+#   DESCRIPTION:  Compares 2 version numbers to see if the first is >= the second
+#                 Note: This uses Python to do the number crunching; DO NOT use it until after Python is installed.
+#    PARAMETERS:  Two (2) version numbers
+#       RETURNS:  0 if $1 >= $2; 1 if $1 < $2
+#----------------------------------------------------------------------------------------------------------------------
+__version_gte() {
+
+    v1="$1"
+    v2="$2"
+
+    result=$(python -c "
+from distutils.version import LooseVersion
+if LooseVersion('$v1') >= LooseVersion('$v2'):
+    print '0'
+else:
+    print '1'
+")
+
+    # If python failed for some reason then this is absolutely not the result we expected,
+    # and we should not rely on $result
+    [ x$? = x0 ] || { echo "ERROR: __version_gte received unexpected result" 1>&2; exit 1; }
+
+    return $result
 }
 
 
@@ -1554,13 +1588,23 @@ __check_services_debian() {
     servicename=$1
     echodebug "Checking if service ${servicename} is enabled"
 
-    # shellcheck disable=SC2086,SC2046,SC2144
-    if [ -f /etc/rc$(runlevel | awk '{ print $2 }').d/S*${servicename} ]; then
-        echodebug "Service ${servicename} is enabled"
+    if [ "$(runlevel)" = "unknown" ]; then
+        # We're running in a Docker image that doesn't know the runlevel.
+        # In this event none of the /etc/init.d scripts will run anyway,
+        # which is the intended behavior.
+
+        # We don't need to check that ${servicename} is enabled.
+        echodebug "Skipping service ${servicename} enabled check (runlevel unknown)"
         return 0
     else
-        echodebug "Service ${servicename} is NOT enabled"
-        return 1
+        # shellcheck disable=SC2086,SC2046,SC2144
+        if [ -f /etc/rc$(runlevel | awk '{ print $2 }').d/S*${servicename} ]; then
+            echodebug "Service ${servicename} is enabled"
+            return 0
+        else
+            echodebug "Service ${servicename} is NOT enabled"
+            return 1
+        fi
     fi
 }   # ----------  end of function __check_services_debian  ----------
 
@@ -1718,8 +1762,7 @@ install_ubuntu_deps() {
     else
         check_pip_allowed "You need to allow pip based installations (-P) in order to install the python package 'requests'"
         __apt_get_install_noinput python-setuptools python-pip
-        __PIP_PACKAGES="requests"
-        pip install requests
+        __PIP_PACKAGES="'requests>=$_PY_REQUESTS_MIN_VERSION'"
     fi
 
     # Additionally install procps and pciutils which allows for Docker boostraps. See 366#issuecomment-39666813
@@ -1951,7 +1994,7 @@ install_debian_deps() {
         check_pip_allowed "You need to allow pip based installations (-P) in order to install the python 'requests' package"
         # Additionally install procps and pciutils which allows for Docker boostraps. See 366#issuecomment-39666813
         __PACKAGES="${__PACKAGES} python-pip"
-        __PIP_PACKAGES="${__PIP_PACKAGES} requests"
+        __PIP_PACKAGES="${__PIP_PACKAGES} 'requests>=$_PY_REQUESTS_MIN_VERSION'"
     else
         __PACKAGES="${__PACKAGES} python-requests"
     fi
@@ -2128,6 +2171,15 @@ _eof
         __PACKAGES="${__PACKAGES} procps pciutils"
         # shellcheck disable=SC2086
         __apt_get_install_noinput ${__PACKAGES} || return 1
+
+        # Check to see what version of python-requests was installed
+        # On wheezy for example there is a REALLY old version and we must upgrade it via pip
+        version=$(pip freeze 2> /dev/null | awk -F== '$1 == "requests" {print $2}')
+        # if ! $version >= $_PY_REQUESTS_MIN_VERSION
+        if ! __version_gte "$version" "$_PY_REQUESTS_MIN_VERSION"; then
+            echodebug "Debian ports installed an old python-ports (version $version); upgrading via pip"
+            pip install -U "requests>=$_PY_REQUESTS_MIN_VERSION"
+        fi
     else
         apt-get update || return 1
         __PACKAGES="python-zmq python-requests python-apt"
@@ -2919,11 +2971,6 @@ install_red_hat_linux_git_deps() {
     fi
     install_centos_git_deps || return 1
     return 0
-}
-
-install_red_hat_enterprise_linux_7_stable_deps() {
-    echoerror "Stable version is not available on RHEL 7 Beta/RC. Please set installation type to git."
-    return 1
 }
 
 install_red_hat_enterprise_linux_stable_deps() {
