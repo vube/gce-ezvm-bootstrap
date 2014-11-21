@@ -2,28 +2,43 @@
 #
 # 5000-download-salt-bootstrap
 #
+# This tries to download the latest revision of bootstrap-salt.sh from
+# the xclusv github's xclusv branch.
+#
+# That is our branch of the official repository, which contains pull requests that
+# haven't yet been merged into the official one.
+#
+# If something happens and we cannot download it (Github down?) then we fall back
+# to our local copy.  For this reason we should try to keep the local copy
+# relatively updated.
+#
 
 . "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
 
-curl -L https://bootstrap.saltstack.com > $BUILD_DIR/bootstrap-salt.sh || fatal $? "Download bootstrap-salt.sh failed"
+URL="https://raw.githubusercontent.com/xclusv/salt-bootstrap/xclusv/bootstrap-salt.sh"
+CURL_OPTIONS="-L -f --connect-timeout 10"
 
-if ! diff -q ../files/bootstrap-salt.sh $BUILD_DIR/bootstrap-salt.sh > /dev/null; then
-    (
-    echo "######################################################################"
-    echo "######################################################################"
-    echo "####  WARNING: bootstrap-salt.sh may be outdated"
-    echo "####"
-    echo "#### The version of bootstrap-salt.sh that we are using does not match"
-    echo "#### the bootstrap.saltstack.com distribution.  It's possible our"
-    echo "#### version is out of date, or that bootstrap.saltstack.com has been"
-    echo "#### hacked."
-    echo "####"
-    echo "#### Please investigate; using outdated installers is probably bad."
-    echo "####"
-    echo "######################################################################"
-    echo "######################################################################"
-    ) 1>&2
+curl $CURL_OPTIONS $URL -o $BUILD_DIR/bootstrap-salt.sh
+r="$?"
+
+FALLBACK=0
+
+# If download failed, or if the downloaded file size is zero, then error
+if [ "$r" != 0 ]; then
+
+    FALLBACK=1
+    echo "WARNING: Github download failed for $URL" 1>&2
+
+elif [ ! -s $BUILD_DIR/bootstrap-salt.sh ]; then
+
+    FALLBACK=1
+    echo "WARNING: Github download returned no result for $URL" 1>&2
+
 fi
 
-# Remove the downloaded one, which might be unsafe
-rm -f $BUILD_DIR/bootstrap-salt.sh
+# If we need to fall back to a static copy for some reason, then do so.
+
+if [ $FALLBACK = 1 ]; then
+    echo "Info: Falling back to bundled bootstrap-salt.sh"
+    cp ../files/bootstrap-salt.sh $BUILD_DIR/bootstrap-salt.sh
+fi

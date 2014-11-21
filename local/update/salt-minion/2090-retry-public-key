@@ -1,0 +1,51 @@
+#!/bin/sh
+#
+# 2090-retry-public-key
+#
+# In the event that this host has existed before and is being recreated, the
+# salt master has an old version of the key on hand.
+#
+# salt-minion will die in that case, so here we poll the minion log to see
+# if it has died, and if so we try to restart it.
+#
+
+IDENT=$(readlink -f $0)
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+
+while true; do
+    echo "$IDENT: waiting for salt-minion log activity"
+    sleep 10
+
+    #- When there is a previously cached key, the salt minion log looks like this:
+    #- (the last 3 lines of it)
+    #
+    # 2014-10-09 21:36:13,794 [salt.crypt                               ][CRITICAL] The Salt Master has rejected this minion's public key!
+    # To repair this issue, delete the public key for this minion on the Salt Master and restart this minion.
+    # Or restart the Salt Master in open mode to clean out the keys. The Salt Minion will now exit.
+
+    temp=$(mktemp -t ezvm-salt-minion-fixup.XXXXXX)
+    sudo tail -n 3 /var/log/salt/minion > $temp
+
+    # If the first line of the last 3 lines looks like this
+    if head -n 1 $temp | grep -i '\[CRITICAL\] The Salt Master has rejected this minion' > /dev/null; then
+        # If the second line of the last 3 lines looks like this
+        if head -n 2 $temp | tail -n 1 | grep -i '^To repair this issue' > /dev/null; then
+            # If the third line of the last 3 times looks like this
+            if tail -n 1 $temp | grep -i '^Or restart the Salt Master in open mode' > /dev/null; then
+
+                # Then the salt-minion has died and we need to restart it
+                echo "$IDENT: found key rejected message in log, restarting salt-minion"
+                sudo /etc/init.d/salt-minion restart || fatal $? "Cannot restart salt-minion"
+
+                # Loop around again and continue inspecting the log to see if we're still
+                # locked out (and need another restart) or if we're OK now.
+                continue
+            fi
+        fi
+    fi
+
+    echo "$IDENT: looks like the key has been accepted"
+    break
+done

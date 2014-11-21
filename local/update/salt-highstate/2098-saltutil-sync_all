@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# 2098-saltutil-sync_all
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+exec sudo salt-call saltutil.sync_all
