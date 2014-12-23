@@ -17,7 +17,7 @@
 #       CREATED: 10/15/2012 09:49:37 PM WEST
 #======================================================================================================================
 set -o nounset                              # Treat unset variables as an error
-__ScriptVersion="2014.10.30"
+__ScriptVersion="2014.12.11"
 __ScriptName="bootstrap-salt.sh"
 
 #======================================================================================================================
@@ -450,7 +450,7 @@ if [ "${CALLER}x" = "${0}x" ]; then
 fi
 
 echoinfo "${CALLER} ${0} -- Version ${__ScriptVersion}"
-echowarn "Running the unstable version of ${__ScriptName}"
+#echowarn "Running the unstable version of ${__ScriptName}"
 
 #---  FUNCTION  -------------------------------------------------------------------------------------------------------
 #          NAME:  __exit_cleanup
@@ -2595,7 +2595,7 @@ __install_epel_repository() {
     elif [ "$DISTRO_MAJOR_VERSION" -eq 6 ]; then
         rpm -Uvh --force "http://download.fedoraproject.org/pub/epel/6/${EPEL_ARCH}/epel-release-6-8.noarch.rpm" || return 1
     elif [ "$DISTRO_MAJOR_VERSION" -eq 7 ]; then
-        rpm -Uvh --force "http://download.fedoraproject.org/pub/epel/7/${EPEL_ARCH}/e/epel-release-7-2.noarch.rpm" || return 1
+        rpm -Uvh --force "http://download.fedoraproject.org/pub/epel/7/${EPEL_ARCH}/e/epel-release-7-5.noarch.rpm" || return 1
     else
         echoerror "Failed add EPEL repository support."
         return 1
@@ -2613,7 +2613,7 @@ __install_saltstack_copr_zeromq_repository() {
             __REPOTYPE="epel"
         fi
         wget -O /etc/yum.repos.d/saltstack-zeromq4.repo \
-                         "https://copr.fedoraproject.org/coprs/saltstack/zeromq4/repo/${__REPOTYPE}-${DISTRO_MAJOR_VERSION}/saltstack-zeromq4-${__REPOTYPE}-${DISTRO_MAJOR_VERSION}.repo" || return 1
+                         "http://copr.fedoraproject.org/coprs/saltstack/zeromq4/repo/${__REPOTYPE}-${DISTRO_MAJOR_VERSION}/saltstack-zeromq4-${__REPOTYPE}-${DISTRO_MAJOR_VERSION}.repo" || return 1
     fi
     return 0
 }
