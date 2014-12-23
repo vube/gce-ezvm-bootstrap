@@ -2139,55 +2139,13 @@ install_debian_7_deps() {
     # shellcheck disable=SC2086
     wget $_WGET_ARGS -q http://debian.saltstack.com/debian-salt-team-joehealy.gpg.key -O - | apt-key add - || return 1
 
-    if [ "$_PIP_ALLOWED" -eq $BS_TRUE ]; then
-        echowarn "PyZMQ will be installed from PyPI in order to compile it against ZMQ3"
-        echowarn "This is required for long term stable minion connections to the master."
-        echowarn "YOU WILL END UP WITH QUITE A FEW PACKAGES FROM DEBIAN UNSTABLE"
-        echowarn "Sleeping for 5 seconds so you can cancel..."
-        sleep 5
-
-        if [ ! -f /etc/apt/sources.list.d/debian-unstable.list ]; then
-           cat <<_eof > /etc/apt/sources.list.d/debian-unstable.list
-deb http://ftp.debian.org/debian unstable main
-deb-src http://ftp.debian.org/debian unstable main
-_eof
-
-           cat <<_eof > /etc/apt/preferences.d/libzmq3-debian-unstable.pref
-Package: libzmq3
-Pin: release a=unstable
-Pin-Priority: 800
-
-Package: libzmq3-dev
-Pin: release a=unstable
-Pin-Priority: 800
-_eof
-        fi
-
-        apt-get update
-        __apt_get_install_noinput -t unstable libzmq3 libzmq3-dev || return 1
-        __PACKAGES="build-essential python-dev python-pip python-requests python-apt"
-        # Additionally install procps and pciutils which allows for Docker boostraps. See 366#issuecomment-39666813
-        __PACKAGES="${__PACKAGES} procps pciutils"
-        # shellcheck disable=SC2086
-        __apt_get_install_noinput ${__PACKAGES} || return 1
-
-        # Check to see what version of python-requests was installed
-        # On wheezy for example there is a REALLY old version and we must upgrade it via pip
-        version=$(pip freeze 2> /dev/null | awk -F== '$1 == "requests" {print $2}')
-        # if ! $version >= $_PY_REQUESTS_MIN_VERSION
-        if ! __version_gte "$version" "$_PY_REQUESTS_MIN_VERSION"; then
-            echodebug "Debian ports installed an old python-ports (version $version); upgrading via pip"
-            pip install -U "requests>=$_PY_REQUESTS_MIN_VERSION"
-        fi
-    else
-        apt-get update || return 1
-        __PACKAGES="python-zmq python-requests python-apt"
-        # Additionally install procps and pciutils which allows for Docker boostraps. See 366#issuecomment-39666813
-        __PACKAGES="${__PACKAGES} procps pciutils"
-        # shellcheck disable=SC2086
-        __apt_get_install_noinput ${__PACKAGES} || return 1
-
-    fi
+    apt-get update || return 1
+    __apt_get_install_noinput -t wheezy-backports libzmq3 libzmq3-dev || return 1
+    __PACKAGES="build-essential python-dev python-pip python-requests python-apt"
+    # Additionally install procps and pciutils which allows for Docker boostraps. See 366#issuecomment-39666813
+    __PACKAGES="${__PACKAGES} procps pciutils"
+    # shellcheck disable=SC2086
+    __apt_get_install_noinput ${__PACKAGES} || return 1
 
     if [ "$_INSTALL_CLOUD" -eq $BS_TRUE ]; then
         check_pip_allowed "You need to allow pip based installations (-P) in order to install apache-libcloud"
@@ -2775,15 +2733,18 @@ install_centos_git_post() {
         [ $fname = "api" ] && ([ "$_INSTALL_MASTER" -eq $BS_FALSE ] || [ "$(which salt-${fname} 2>/dev/null)" = "" ]) && continue
         [ $fname = "syndic" ] && [ "$_INSTALL_SYNDIC" -eq $BS_FALSE ] && continue
 
-        if [ ! -f /usr/lib/systemd/system/salt-${fname}.service ] || ([ -f /usr/lib/systemd/system/salt-${fname}.service ] && [ $_FORCE_OVERWRITE -eq $BS_TRUE ]); then
-            copyfile "${__SALT_GIT_CHECKOUT_DIR}/pkg/rpm/salt-${fname}.service" /usr/lib/systemd/system/
+        if [ -f /bin/systemctl ]; then
+            if [ ! -f /usr/lib/systemd/system/salt-${fname}.service ] || ([ -f /usr/lib/systemd/system/salt-${fname}.service ] && [ $_FORCE_OVERWRITE -eq $BS_TRUE ]); then
+                copyfile "${__SALT_GIT_CHECKOUT_DIR}/pkg/rpm/salt-${fname}.service" /usr/lib/systemd/system/
+            fi
 
             # Skip salt-api since the service should be opt-in and not necessarily started on boot
             [ $fname = "api" ] && continue
 
             /bin/systemctl enable salt-${fname}.service
             SYSTEMD_RELOAD=$BS_TRUE
-        elif [ ! -f /usr/lib/systemd/system/salt-${fname}.service ] && [ ! -f /etc/init.d/salt-$fname ] || ([ -f /etc/init.d/salt-$fname ] && [ $_FORCE_OVERWRITE -eq $BS_TRUE ]); then
+
+        elif [ ! -f /etc/init.d/salt-$fname ] || ([ -f /etc/init.d/salt-$fname ] && [ $_FORCE_OVERWRITE -eq $BS_TRUE ]); then
             copyfile "${__SALT_GIT_CHECKOUT_DIR}/pkg/rpm/salt-${fname}" /etc/init.d/
             chmod +x /etc/init.d/salt-${fname}
 
