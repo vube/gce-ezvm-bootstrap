@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+# 2097-salt-deps
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+exec sudo easy_install six
+exec sudo apt-get install python-gnupg
