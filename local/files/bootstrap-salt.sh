@@ -17,7 +17,7 @@
 #       CREATED: 10/15/2012 09:49:37 PM WEST
 #======================================================================================================================
 set -o nounset                              # Treat unset variables as an error
-__ScriptVersion="2014.12.11"
+__ScriptVersion="2015.03.04"
 __ScriptName="bootstrap-salt.sh"
 
 #======================================================================================================================
@@ -2028,6 +2028,9 @@ install_debian_6_deps() {
 
     apt-get update
 
+    # Make sure wget is available
+    __apt_get_install_noinput wget
+
     # Install Keys
     __apt_get_install_noinput debian-archive-keyring && apt-get update
 
@@ -2073,13 +2076,9 @@ _eof
     fi
 
     # Debian Backports
-    if [ "$(grep -R 'backports.debian.org' /etc/apt)" = "" ]; then
-        echo "deb http://backports.debian.org/debian-backports squeeze-backports main" >> \
+    if [ "$(grep -R 'squeeze-backports' /etc/apt | grep -v "^#")" = "" ]; then
+        echo "deb http://http.debian.net/debian-backports squeeze-backports main" >> \
             /etc/apt/sources.list.d/backports.list
-
-        # Add the backports key
-        gpg --keyserver pgpkeys.mit.edu --recv-key 8B48AD6246925553
-        gpg -a --export 8B48AD6246925553 | apt-key add -
     fi
 
     # Saltstack's Stable Debian repository
@@ -2125,8 +2124,18 @@ install_debian_7_deps() {
     export DEBIAN_FRONTEND=noninteractive
 
     apt-get update
+
+    # Make sure wget is available
+    __apt_get_install_noinput wget
+
     # Install Keys
     __apt_get_install_noinput debian-archive-keyring && apt-get update
+
+    # Debian Backports
+    if [ "$(grep -R 'wheezy-backports' /etc/apt | grep -v "^#")" = "" ]; then
+        echo "deb http://http.debian.net/debian wheezy-backports main" >> \
+            /etc/apt/sources.list.d/backports.list
+    fi
 
     # Saltstack's Stable Debian repository
     if [ "$(grep -R 'wheezy-saltstack' /etc/apt)" = "" ]; then
@@ -2138,7 +2147,7 @@ install_debian_7_deps() {
     wget $_WGET_ARGS -q http://debian.saltstack.com/debian-salt-team-joehealy.gpg.key -O - | apt-key add - || return 1
 
     apt-get update || return 1
-    __apt_get_install_noinput -t wheezy-backports libzmq3 libzmq3-dev python-zmq python-requests python-apt || return 1
+    __apt_get_install_noinput -t wheezy-backports libpcre3 libzmq3 libzmq3-dev python-zmq python-requests python-apt || return 1
     # Additionally install procps and pciutils which allows for Docker boostraps. See 366#issuecomment-39666813
     __PACKAGES="procps pciutils"
     # shellcheck disable=SC2086
@@ -2147,6 +2156,7 @@ install_debian_7_deps() {
     if [ "$_INSTALL_CLOUD" -eq $BS_TRUE ]; then
         check_pip_allowed "You need to allow pip based installations (-P) in order to install apache-libcloud"
         __PACKAGES="build-essential python-dev python-pip"
+        # shellcheck disable=SC2086
         __apt_get_install_noinput ${__PACKAGES} || return 1
         pip install -U "apache-libcloud>=$_LIBCLOUD_MIN_VERSION"
     fi
@@ -2261,6 +2271,13 @@ __install_debian_stable() {
     # shellcheck disable=SC2086
     __apt_get_install_noinput ${__PACKAGES} || return 1
 
+    return 0
+}
+
+
+install_debian_6_stable() {
+    __install_debian_stable || return 1
+
     if [ "$_PIP_ALLOWED" -eq $BS_TRUE ]; then
         # Building pyzmq from source to build it against libzmq3.
         # Should override current installation
@@ -2269,12 +2286,6 @@ __install_debian_stable() {
         easy_install -U pyzmq || return 1
     fi
 
-    return 0
-}
-
-
-install_debian_6_stable() {
-    __install_debian_stable || return 1
     return 0
 }
 
@@ -2289,13 +2300,6 @@ install_debian_8_stable() {
 }
 
 install_debian_git() {
-    if [ "$_PIP_ALLOWED" -eq $BS_TRUE ]; then
-        # Building pyzmq from source to build it against libzmq3.
-        # Should override current installation
-        # Using easy_install instead of pip because at least on Debian 6,
-        # there's no default virtualenv active.
-        easy_install -U pyzmq || return 1
-    fi
 
     if [ -f "${__SALT_GIT_CHECKOUT_DIR}/salt/syspaths.py" ]; then
         python setup.py install --install-layout=deb --salt-config-dir="$_SALT_ETC_DIR" || return 1
@@ -2305,6 +2309,14 @@ install_debian_git() {
 }
 
 install_debian_6_git() {
+    if [ "$_PIP_ALLOWED" -eq $BS_TRUE ]; then
+        # Building pyzmq from source to build it against libzmq3.
+        # Should override current installation
+        # Using easy_install instead of pip because at least on Debian 6,
+        # there's no default virtualenv active.
+        easy_install -U pyzmq || return 1
+    fi
+
     install_debian_git || return 1
     return 0
 }
@@ -2563,23 +2575,34 @@ __install_epel_repository() {
 
 __install_saltstack_copr_zeromq_repository() {
     echoinfo "Installing Zeromq >=4 and PyZMQ>=14 from SaltStack's COPR repository"
-    if [ ! -f /etc/yum.repos.d/saltstack-zeromq4.repo ]; then
+    if [ ! -s /etc/yum.repos.d/saltstack-zeromq4.repo ]; then
         if [ "${DISTRO_NAME_L}" = "fedora" ]; then
             __REPOTYPE="${DISTRO_NAME_L}"
         else
             __REPOTYPE="epel"
         fi
-        wget -O /etc/yum.repos.d/saltstack-zeromq4.repo \
+        __fetch_url /etc/yum.repos.d/saltstack-zeromq4.repo \
                          "http://copr.fedoraproject.org/coprs/saltstack/zeromq4/repo/${__REPOTYPE}-${DISTRO_MAJOR_VERSION}/saltstack-zeromq4-${__REPOTYPE}-${DISTRO_MAJOR_VERSION}.repo" || return 1
     fi
     return 0
 }
 
+__install_saltstack_copr_salt_el5_repository() {
+    if [ ! -s /etc/yum.repos.d/saltstack-salt-el5-epel-5.repo ]; then
+        __fetch_url /etc/yum.repos.d/saltstack-salt-el5-epel-5.repo \
+            "http://copr.fedoraproject.org/coprs/saltstack/salt-el5/repo/epel-5/saltstack-salt-el5-epel-5.repo" || return 1
+    fi
+    return 0
+}
 
 install_centos_stable_deps() {
     __install_epel_repository || return 1
+    if [ "$DISTRO_MAJOR_VERSION" -eq 5 ]; then
+        __install_saltstack_copr_salt_el5_repository || return 1
+    fi
 
-    if [ "$_ENABLE_EXTERNAL_ZMQ_REPOS" -eq $BS_TRUE ]; then
+    if [ "$_ENABLE_EXTERNAL_ZMQ_REPOS" -eq $BS_TRUE ] && [ "$DISTRO_MAJOR_VERSION" -gt 5 ]; then
+        yum -y install python-hashlib || return 1
         __install_saltstack_copr_zeromq_repository || return 1
     fi
 
@@ -2620,7 +2643,7 @@ install_centos_stable_deps() {
         if [ "$DISTRO_MAJOR_VERSION" -eq 5 ]; then
             easy_install-2.6 "apache-libcloud>=$_LIBCLOUD_MIN_VERSION"
         else
-            pip-python install "apache-libcloud>=$_LIBCLOUD_MIN_VERSION"
+            pip install "apache-libcloud>=$_LIBCLOUD_MIN_VERSION"
         fi
     fi
 
@@ -2646,9 +2669,13 @@ install_centos_stable() {
     if [ "$_INSTALL_MINION" -eq $BS_TRUE ]; then
         __PACKAGES="${__PACKAGES} salt-minion"
     fi
-    if [ "$_INSTALL_MASTER" -eq $BS_TRUE ] || [ "$_INSTALL_SYNDIC" -eq $BS_TRUE ]; then
+    if [ "$_INSTALL_MASTER" -eq $BS_TRUE ];then
         __PACKAGES="${__PACKAGES} salt-master"
+    fi   
+    if [ "$_INSTALL_SYNDIC" -eq $BS_TRUE ];then
+        __PACKAGES="${__PACKAGES} salt-syndic"
     fi
+    
     if [ "$DISTRO_NAME_L" = "oracle_linux" ]; then
         # We need to install one package at a time because --enablerepo=X disables ALL OTHER REPOS!!!!
         for package in ${__PACKAGES}; do
@@ -2862,6 +2889,10 @@ install_centos_check_services() {
 #
 __test_rhel_optionals_packages() {
     __install_epel_repository || return 1
+
+    if [ "$DISTRO_MAJOR_VERSION" -ge 7 ]; then
+        yum-config-manager --enable \*server-optional || return 1
+    fi
 
     if [ "$DISTRO_MAJOR_VERSION" -ge 6 ]; then
         # Let's enable package installation testing, kind of, --dry-run
@@ -3379,6 +3410,12 @@ install_arch_linux_stable_deps() {
         pacman-key --init && pacman-key --populate archlinux || return 1
     fi
 
+    pacman -Sy --noconfirm --needed pacman || return 1
+
+    if [ "$(which pacman-db-upgrade)" != "" ]; then
+        pacman-db-upgrade || return 1
+    fi
+
     if [ "$_UPGRADE_SYS" -eq $BS_TRUE ]; then
         pacman -Syyu --noconfirm --needed || return 1
     fi
@@ -3398,9 +3435,8 @@ install_arch_linux_stable_deps() {
 install_arch_linux_git_deps() {
     install_arch_linux_stable_deps
 
-    pacman -Sy --noconfirm --needed pacman || return 1
     # Don't fail if un-installing python2-distribute threw an error
-    pacman -R --noconfirm --needed python2-distribute
+    pacman -R --noconfirm python2-distribute
     pacman -Sy --noconfirm --needed git python2-crypto python2-setuptools python2-jinja \
         python2-m2crypto python2-markupsafe python2-msgpack python2-psutil python2-yaml \
         python2-pyzmq zeromq python2-requests python2-systemd || return 1
@@ -3424,7 +3460,7 @@ install_arch_linux_stable() {
     pacman -S --noconfirm --needed bash || return 1
     pacman -Su --noconfirm || return 1
     # We can now resume regular salt update
-    pacman -Syu --noconfirm salt || return 1
+    pacman -Syu --noconfirm salt-zmq || return 1
     return 0
 }
 
@@ -3627,6 +3663,10 @@ install_freebsd_9_stable_deps() {
         echoinfo "Installing the following extra packages as requested: ${_EXTRA_PACKAGES}"
         # shellcheck disable=SC2086
         /usr/local/sbin/pkg install ${SALT_PKG_FLAGS} -y ${_EXTRA_PACKAGES} || return 1
+    fi
+
+    if [ "$_UPGRADE_SYS" -eq $BS_TRUE ]; then
+        pkg upgrade -y || return 1
     fi
 
     return 0
