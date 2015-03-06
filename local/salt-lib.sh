@@ -7,8 +7,14 @@ install_salt() {
 
     extraFlags="${1:-}"
     flags="-i $(hostname -s) -n -G"
-#    version="git v2014.1.13"
-    version="git v2014.7.0rc7"
+
+    # __SET_SALT_VERSION__ -- keep this comment so we can easily find where to set the salt version
+#    version="git v2014.7.0rc7"
+    version="git v2014.7.2"
+
+    # Load the 'xclusv' branch of xclusv's salt repo, where Ross has changes pending
+#    flags="$flags -g https://github.com/xclusv/salt.git"
+#    version="git xclusv"
 
     # Here we tell salt to fully Upgrade (-U) the system
     # and to use PIP (-P) to install dependencies.
