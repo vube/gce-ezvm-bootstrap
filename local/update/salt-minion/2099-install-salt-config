@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# 2099-install-salt-config
+#
+# If a custon salt configuration exists, install it and restart.
+#
+
+MINION_CONFIG="$(dirname "$0")/../../files/etc-salt-minion"
+
+if [ -f "$MINION_CONFIG" ] ; then
+  exec sudo cp "$MINION_CONFIG" /etc/salt/minion
+  exec sudo /etc/init.d/salt-minion restart
+fi

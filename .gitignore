@@ -2,3 +2,5 @@
 /.idea/
 /configuration
 /local/configuration
+/local/files/etc-salt-master
+/local/files/etc-salt-minion
