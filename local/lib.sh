@@ -36,8 +36,16 @@ get_metadata() {
 	# curl -s means no progress meter;
 	#      -f means fail silently (don't print content and exit non-zero)
 	curl -fs "http://metadata/computeMetadata/v1/instance/$path" \
-		-H "Metadata-Flavor: Google" \
-	|| fatal $? "Cannot query metadata [$path]"
+		-H "Metadata-Flavor: Google"
+
+    r=$?
+    case $r in
+        22) ;; # This is a 404 error, as in the $path doesn't exist; no problem.
+        0) ;; # Success we got the $path
+        *) echo "ERROR: Querying metadata [$path] (code=$r)" 1>&2 ;;
+    esac
+
+    exit $r
 }
 
 
