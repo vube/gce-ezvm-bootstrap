@@ -44,7 +44,7 @@ to be the URL of the bootstrap.sh script.
 ### Example VM creation command
 
 ```bash
-gcloud compute --project "my-project" instances create "my-instance" --zone "us-central1-a" --machine-type "n1-highcpu-1" --network "default" --metadata "startup-script-url=__CONFIGURE_GS_BOOTSTRAP_URL__" --maintenance-policy "MIGRATE" --scopes "https://www.googleapis.com/auth/userinfo.email" "https://www.googleapis.com/auth/compute" "https://www.googleapis.com/auth/devstorage.read_write" --image "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/backports-debian-7-wheezy-v20140904"
+gcloud compute --project "my-project" instances create "my-instance" --zone "us-central1-a" --machine-type "n1-standard-1" --network "default" --metadata "startup-script-url=__CONFIGURE_GS_BOOTSTRAP_URL__" --maintenance-policy "MIGRATE" --scopes "https://www.googleapis.com/auth/userinfo.email" "https://www.googleapis.com/auth/compute" "https://www.googleapis.com/auth/devstorage.read_write" --image "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/debian-7-backports"
 ```
 
 For the above command to work, you must replace the following settings with your own:
@@ -127,7 +127,7 @@ it which specific procedure to execute.
 For example, in this compute command
 
 ```bash
-gcloud compute --project "my-project" instances create "my-instance" --zone "us-central1-a" --machine-type "n1-highcpu-1" --network "default" --metadata "startup-script-url=__CONFIGURE_GS_BOOTSTRAP_URL__" --maintenance-policy "MIGRATE" --scopes "https://www.googleapis.com/auth/userinfo.email" "https://www.googleapis.com/auth/compute" "https://www.googleapis.com/auth/devstorage.read_write" --image "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/backports-debian-7-wheezy-v20140904"
+gcloud compute --project "my-project" instances create "my-instance" --zone "us-central1-a" --machine-type "n1-standard-1" --network "default" --metadata "startup-script-url=__CONFIGURE_GS_BOOTSTRAP_URL__" --maintenance-policy "MIGRATE" --scopes "https://www.googleapis.com/auth/userinfo.email" "https://www.googleapis.com/auth/compute" "https://www.googleapis.com/auth/devstorage.read_write" --image "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/debian-7-backports"
 ```
 
 The significant element of the command is the metadata, like
@@ -171,10 +171,10 @@ steps, and this automates it.
 To create a salt master, run this command:
 
 ```bash
-gcloud compute --project "my-project" instances create "salt" --zone "us-central1-a" --machine-type "n1-highcpu-1" --network "default" --metadata "startup-script-url=__CONFIGURE_GS_BOOTSTRAP_URL__" "ezvm-updates=salt-master" --maintenance-policy "MIGRATE" --scopes "https://www.googleapis.com/auth/userinfo.email" "https://www.googleapis.com/auth/compute" "https://www.googleapis.com/auth/devstorage.read_write" --image "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/backports-debian-7-wheezy-v20140904"
+gcloud compute --project "my-project" instances create "salt" --zone "us-central1-a" --machine-type "n1-standard-1" --network "default" --metadata "startup-script-url=__CONFIGURE_GS_BOOTSTRAP_URL__" "ezvm-updates=salt-common salt-master" --maintenance-policy "MIGRATE" --scopes "https://www.googleapis.com/auth/userinfo.email" "https://www.googleapis.com/auth/compute" "https://www.googleapis.com/auth/devstorage.read_write" --image "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/debian-7-backports"
 ```
 
-Notice the metadata `ezvm-updates=salt-master`, that is what causes it to run the
+Notice the metadata `ezvm-updates=salt-common salt-master`, that is what causes it to run the
 update routines in [local/update/salt-master](local/update/salt-master), which is what
 actually does the work.
 
