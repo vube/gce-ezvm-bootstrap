@@ -17,8 +17,18 @@ case $r in
 esac
 
 if [ "$ezvm_updates" != "" ]; then
+
+    zone_ident=$(get_metadata "zone")
+    r=$?
+    case $r in
+        22) ;; # This is a 404 error, as in the zone doesn't exist; no problem.
+        0) ;; # Success we got the zone
+        *) fatal $r "Error querying zone (code=$r)" ;;
+    esac
+    zone=$(echo "$zone_ident" | sed -e 's,.*/zones/,,' -e 's,/.*,,')
+
     instance=$(hostname)
-    cmd="gcloud compute instances remove-metadata $instance --metadata ezvm-updates"
+    cmd="gcloud compute instances remove-metadata $instance --zone $zone --keys ezvm-updates"
     echo "$cmd"
     sudo $cmd || fatal $? "Failed to remove ezvm-updates metadata on instance=$instance"
 fi
