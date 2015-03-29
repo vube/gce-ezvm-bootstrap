@@ -1,0 +1,34 @@
+#!/bin/sh
+#
+# 1001-remove-ezvm-updates-metadata
+#
+# Remove the ezvm-updates metadata from this instance.  We've used it to install
+# salt, which is now installed.  If you want to update the machine, use salt.
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+ezvm_updates=$(get_metadata_attribute "ezvm-updates")
+r=$?
+case $r in
+    22) ;; # This is a 404 error, as in the ezvm-updates doesn't exist; no problem.
+    0) ;; # Success we got the ezvm-updates
+    *) fatal $r "Error querying ezvm-updates (code=$r)" ;;
+esac
+
+if [ "$ezvm_updates" != "" ]; then
+
+    zone_ident=$(get_metadata "zone")
+    r=$?
+    case $r in
+        22) ;; # This is a 404 error, as in the zone doesn't exist; no problem.
+        0) ;; # Success we got the zone
+        *) fatal $r "Error querying zone (code=$r)" ;;
+    esac
+    zone=$(echo "$zone_ident" | sed -e 's,.*/zones/,,' -e 's,/.*,,')
+
+    instance=$(hostname)
+    cmd="gcloud compute instances remove-metadata $instance --zone $zone --keys ezvm-updates"
+    echo "$cmd"
+    sudo $cmd || fatal $? "Failed to remove ezvm-updates metadata on instance=$instance"
+fi

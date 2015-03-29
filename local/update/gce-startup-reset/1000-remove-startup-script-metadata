@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# 1000-remove-startup-script-metadata
+#
+# Update the GCE metadata so that the startup-script-url is not set.
+# If we have previously set startup-script-url to be the ezvm-bootstrap,
+# then that means on every reboot we'll bootstrap again, which is probably
+# not what you want.  So run this to unset it so reboot works the way it
+# normally does, without a rerun of the bootstrap.
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+startup_script_url=$(get_metadata_attribute "startup-script-url")
+r=$?
+case $r in
+    22) ;; # This is a 404 error, as in the startup-script-url doesn't exist; no problem.
+    0) ;; # Success we got the startup-script-url
+    *) fatal $r "Error querying startup-script-url (code=$r)" ;;
+esac
+
+if [ "$startup_script_url" != "" ]; then
+
+    zone_ident=$(get_metadata "zone")
+    r=$?
+    case $r in
+        22) ;; # This is a 404 error, as in the zone doesn't exist; no problem.
+        0) ;; # Success we got the zone
+        *) fatal $r "Error querying zone (code=$r)" ;;
+    esac
+    zone=$(echo "$zone_ident" | sed -e 's,.*/zones/,,' -e 's,/.*,,')
+
+    instance=$(hostname)
+    cmd="gcloud compute instances remove-metadata $instance --zone $zone --keys startup-script-url"
+    echo "$cmd"
+    sudo $cmd || fatal $? "Failed to remove startup-script-url metadata on instance=$instance"
+fi
