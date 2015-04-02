@@ -12,4 +12,4 @@
 # TODO: If needed, add multi-platform support
 
 # Debian
-sudo apt-get update -y || die $? "apt-get update -y failed"
+sudo apt-get update -y || fatal $? "apt-get update -y failed"
