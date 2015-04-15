@@ -6,7 +6,7 @@
 # go through we know we're always working with the latest stuff.
 #
 
-. "$(dirname "$0")/../lib.sh" || { echo "Cannot include ../lib.sh" 1>&2; exit 1; }
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../lib.sh" 1>&2; exit 1; }
 
 
 # TODO: If needed, add multi-platform support
