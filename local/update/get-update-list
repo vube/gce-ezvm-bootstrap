@@ -38,4 +38,10 @@ find . -maxdepth 1 -type f -print | sort | grep -v "^$(basename $0)\$"
 #
 for d in $ezvm_updates; do
     find "./$d" -type f -print | sort
+
+    # If this is the salt-minion dir, then after this dir we must implicitly add 'salt-minion-reset'
+    # in case the key has been reset on the minion or deleted from the master.
+    if [ "$d" = "salt-minion" -a -d "./salt-minion-reset" ]; then
+        find "./salt-minion-reset" -type f -print | sort
+    fi
 done
