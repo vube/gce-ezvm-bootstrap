@@ -12,15 +12,98 @@
 
 . "$(dirname "$0")/../lib.sh" || { echo "Cannot include ../lib.sh" 1>&2; exit 1; }
 
-# Get the server role
-# If this fails get_metadata_attribute prints error info so we just need to exit with the failure code
-ezvm_updates=$(get_metadata_attribute "ezvm-updates")
+DEBUG=0
+
+# Determine if we're running on GCE
+is_gce=$(get_metadata "id")
 r=$?
 case $r in
     22) ;; # This is a 404 error, as in the metadata doesn't exist; no problem.
     0) ;; # Success we got the metadata
     *) fatal $r "Error querying metadata (code=$r)" ;;
 esac
+
+if [ -z "$is_gce" ]; then
+    is_gce=0
+    debug_output "NOT running in GCE"
+    ezvm_updates=""
+else
+    is_gce=1
+    debug_output "Currently running in GCE"
+    ezvm_updates="gce-maintenance"
+fi
+
+
+if [ $is_gce = 1 ]; then
+    # Get the server role
+    # If this fails get_metadata_attribute prints error info so we just need to exit with the failure code
+    ezvm_updates=$(get_metadata_attribute "ezvm-updates")
+    r=$?
+    case $r in
+        22) ;; # This is a 404 error, as in the metadata doesn't exist; no problem.
+        0) ;; # Success we got the metadata
+        *) fatal $r "Error querying metadata (code=$r)" ;;
+    esac
+    debug_output "After querying metadata, ezvm_updates='$ezvm_updates'"
+fi
+
+
+splice_update_before() {
+    before=$1
+    update=$2
+    beforeEscaped=$(echo "$before" | sed -e 's,\-,\\-,g')
+    updateEscaped=$(echo "$update" | sed -e 's,\-,\\-,g')
+
+    # If the $update exists AFTER $before, then remove it so we can add it back in the correct place
+    if echo "$ezvm_updates" | grep -v "$beforeEscaped.*[[:space:]]*$updateEscaped" > /dev/null 2>&1; then
+        ezvm_updates="$(echo " $ezvm_updates " | sed -e "s,[[:space:]]$updateEscaped[[:space:]], ,")"
+        debug_output "During splicing $update before $before, removed $update, ezvm_updates='$ezvm_updates'"
+    fi
+
+    # If the $update doesn't exist, add it before $before
+    if ! echo "$ezvm_updates" | grep -v "$beforeEscaped" > /dev/null 2>&1; then
+        ezvm_updates=$(echo "$ezvm_updates" | sed -e "s,$beforeEscaped,$update $before,")
+    fi
+
+    debug_output "After splicing $update before $before, ezvm_updates='$ezvm_updates'"
+}
+
+splice_update_after() {
+    after=$1
+    update=$2
+    afterEscaped=$(echo "$after" | sed -e 's,\-,\\-,g')
+    updateEscaped=$(echo "$update" | sed -e 's,\-,\\-,g')
+
+    # If the $update exists BEFORE $after, then remove it so we can add it back in the correct place
+    if echo "$ezvm_updates" | grep -v "$updateEscaped.*[[:space:]]*$afterEscaped" > /dev/null 2>&1; then
+        ezvm_updates="$(echo " $ezvm_updates " | sed -e "s,[[:space:]]$updateEscaped[[:space:]], ,")"
+        debug_output "During splicing $update after $after, removed $update, ezvm_updates='$ezvm_updates'"
+    fi
+
+    # If the update doesn't exist, add it after $after
+    if ! echo "$ezvm_updates" | grep -v "$afterEscaped" > /dev/null 2>&1; then
+        ezvm_updates=$(echo "$ezvm_updates" | sed -e "s,$afterEscaped,$after $update,")
+    fi
+
+    debug_output "After splicing $update after $after, ezvm_updates='$ezvm_updates'"
+}
+
+# If we are installing salt-minion, then insert salt-common updates before salt-minion
+if echo "$ezvm_updates" | grep 'salt\-minion' > /dev/null 2>&1; then
+    # 1) Only insert salt-common if it doesn't already exist in the list
+    splice_update_before 'salt-minion' 'salt-common'
+    # 2) If a salt-minion-reset was not explicitly provided, add it after the salt-minion
+    splice_update_after 'salt-minion' 'salt-minion-reset'
+    # 3) If a salt-highstate was not explicitly provided, add it after the salt-minion-reset
+    splice_update_after 'salt-minion-reset' 'salt-highstate'
+fi
+
+# If we are installing salt-master, then insert salt-common updates before salt-master
+if echo "$ezvm_updates" | grep 'salt\-master' > /dev/null 2>&1; then
+    # Only insert it if it doesn't already exist in the list
+    splice_update_before 'salt-master' 'salt-common'
+fi
+
 
 # List of update dirs must have associated setup routines
 for d in $ezvm_updates; do
@@ -38,10 +121,4 @@ find . -maxdepth 1 -type f -print | sort | grep -v "^$(basename $0)\$"
 #
 for d in $ezvm_updates; do
     find "./$d" -type f -print | sort
-
-    # If this is the salt-minion dir, then after this dir we must implicitly add 'salt-minion-reset'
-    # in case the key has been reset on the minion or deleted from the master.
-    if [ "$d" = "salt-minion" -a -d "./salt-minion-reset" ]; then
-        find "./salt-minion-reset" -type f -print | sort
-    fi
 done
