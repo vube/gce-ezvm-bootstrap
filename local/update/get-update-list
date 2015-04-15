@@ -37,13 +37,14 @@ fi
 if [ $is_gce = 1 ]; then
     # Get the server role
     # If this fails get_metadata_attribute prints error info so we just need to exit with the failure code
-    ezvm_updates=$(get_metadata_attribute "ezvm-updates")
+    metadata=$(get_metadata_attribute "ezvm-updates")
     r=$?
     case $r in
         22) ;; # This is a 404 error, as in the metadata doesn't exist; no problem.
         0) ;; # Success we got the metadata
         *) fatal $r "Error querying metadata (code=$r)" ;;
     esac
+    ezvm_updates="$ezvm_updates $metadata"
     debug_output "After querying metadata, ezvm_updates='$ezvm_updates'"
 fi
 
@@ -55,13 +56,13 @@ splice_update_before() {
     updateEscaped=$(echo "$update" | sed -e 's,\-,\\-,g')
 
     # If the $update exists AFTER $before, then remove it so we can add it back in the correct place
-    if echo "$ezvm_updates" | grep -v "$beforeEscaped.*[[:space:]]*$updateEscaped" > /dev/null 2>&1; then
+    if echo "$ezvm_updates" | grep "$beforeEscaped.*[[:space:]]*$updateEscaped" > /dev/null 2>&1; then
         ezvm_updates="$(echo " $ezvm_updates " | sed -e "s,[[:space:]]$updateEscaped[[:space:]], ,")"
         debug_output "During splicing $update before $before, removed $update, ezvm_updates='$ezvm_updates'"
     fi
 
     # If the $update doesn't exist, add it before $before
-    if ! echo "$ezvm_updates" | grep -v "$beforeEscaped" > /dev/null 2>&1; then
+    if ! echo "$ezvm_updates" | grep "$updateEscaped" > /dev/null 2>&1; then
         ezvm_updates=$(echo "$ezvm_updates" | sed -e "s,$beforeEscaped,$update $before,")
     fi
 
@@ -75,13 +76,13 @@ splice_update_after() {
     updateEscaped=$(echo "$update" | sed -e 's,\-,\\-,g')
 
     # If the $update exists BEFORE $after, then remove it so we can add it back in the correct place
-    if echo "$ezvm_updates" | grep -v "$updateEscaped.*[[:space:]]*$afterEscaped" > /dev/null 2>&1; then
+    if echo "$ezvm_updates" | grep "$updateEscaped.*[[:space:]]*$afterEscaped" > /dev/null 2>&1; then
         ezvm_updates="$(echo " $ezvm_updates " | sed -e "s,[[:space:]]$updateEscaped[[:space:]], ,")"
         debug_output "During splicing $update after $after, removed $update, ezvm_updates='$ezvm_updates'"
     fi
 
     # If the update doesn't exist, add it after $after
-    if ! echo "$ezvm_updates" | grep -v "$afterEscaped" > /dev/null 2>&1; then
+    if ! echo "$ezvm_updates" | grep "$updateEscaped" > /dev/null 2>&1; then
         ezvm_updates=$(echo "$ezvm_updates" | sed -e "s,$afterEscaped,$after $update,")
     fi
 
