@@ -50,20 +50,20 @@ fi
 
 
 splice_update_before() {
-    before=$1
-    update=$2
-    beforeEscaped=$(echo "$before" | sed -e 's,\-,\\-,g')
+    update=$1
+    before=$2
     updateEscaped=$(echo "$update" | sed -e 's,\-,\\-,g')
+    beforeEscaped=$(echo "$before" | sed -e 's,\-,\\-,g')
 
     # If the $update exists AFTER $before, then remove it so we can add it back in the correct place
-    if echo "$ezvm_updates" | grep "$beforeEscaped.*[[:space:]]*$updateEscaped" > /dev/null 2>&1; then
+    if echo " $ezvm_updates " | grep " $beforeEscaped  *\(.* \)*$updateEscaped " > /dev/null 2>&1; then
         ezvm_updates="$(echo " $ezvm_updates " | sed -e "s,[[:space:]]$updateEscaped[[:space:]], ,")"
         debug_output "During splicing $update before $before, removed $update, ezvm_updates='$ezvm_updates'"
     fi
 
     # If the $update doesn't exist, add it before $before
-    if ! echo "$ezvm_updates" | grep "$updateEscaped" > /dev/null 2>&1; then
-        ezvm_updates=$(echo "$ezvm_updates" | sed -e "s,$beforeEscaped,$update $before,")
+    if ! echo " $ezvm_updates " | grep " $updateEscaped " > /dev/null 2>&1; then
+        ezvm_updates=$(echo " $ezvm_updates " | sed -e "s, $beforeEscaped , $update $before ,")
     fi
 
     debug_output "After splicing $update before $before, ezvm_updates='$ezvm_updates'"
@@ -76,23 +76,23 @@ splice_update_after() {
     updateEscaped=$(echo "$update" | sed -e 's,\-,\\-,g')
 
     # If the $update exists BEFORE $after, then remove it so we can add it back in the correct place
-    if echo "$ezvm_updates" | grep "$updateEscaped.*[[:space:]]*$afterEscaped" > /dev/null 2>&1; then
+    if echo " $ezvm_updates " | grep " $updateEscaped  *\(.* \)*$afterEscaped " > /dev/null 2>&1; then
         ezvm_updates="$(echo " $ezvm_updates " | sed -e "s,[[:space:]]$updateEscaped[[:space:]], ,")"
         debug_output "During splicing $update after $after, removed $update, ezvm_updates='$ezvm_updates'"
     fi
 
     # If the update doesn't exist, add it after $after
-    if ! echo "$ezvm_updates" | grep "$updateEscaped" > /dev/null 2>&1; then
-        ezvm_updates=$(echo "$ezvm_updates" | sed -e "s,$afterEscaped,$after $update,")
+    if ! echo " $ezvm_updates " | grep " $updateEscaped " > /dev/null 2>&1; then
+        ezvm_updates=$(echo " $ezvm_updates " | sed -e "s, $afterEscaped , $after $update ,")
     fi
 
     debug_output "After splicing $update after $after, ezvm_updates='$ezvm_updates'"
 }
 
 # If we are installing salt-minion, then insert salt-common updates before salt-minion
-if echo "$ezvm_updates" | grep 'salt\-minion' > /dev/null 2>&1; then
+if echo " $ezvm_updates " | grep ' salt\-minion ' > /dev/null 2>&1; then
     # 1) Only insert salt-common if it doesn't already exist in the list
-    splice_update_before 'salt-minion' 'salt-common'
+    splice_update_before 'salt-common' 'salt-minion'
     # 2) If a salt-minion-reset was not explicitly provided, add it after the salt-minion
     splice_update_after 'salt-minion' 'salt-minion-reset'
     # 3) If a salt-highstate was not explicitly provided, add it after the salt-minion-reset
@@ -100,9 +100,9 @@ if echo "$ezvm_updates" | grep 'salt\-minion' > /dev/null 2>&1; then
 fi
 
 # If we are installing salt-master, then insert salt-common updates before salt-master
-if echo "$ezvm_updates" | grep 'salt\-master' > /dev/null 2>&1; then
+if echo " $ezvm_updates " | grep ' salt\-master ' > /dev/null 2>&1; then
     # Only insert it if it doesn't already exist in the list
-    splice_update_before 'salt-master' 'salt-common'
+    splice_update_before 'salt-common' 'salt-master'
 fi
 
 
