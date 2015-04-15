@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# 2000-update-gcloud-components
+#
+# Over time, the gcloud components will be updated, but our images won't have the
+# new versions of them.  They'll then complain to stdout/stderr that they need to
+# be updated, which is annoying.
+#
+# This will update them if needed.
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+
+sudo gcloud components update -q || fatal $? "Failed to update gcloud components"

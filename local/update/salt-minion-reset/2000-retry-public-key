@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# 2090-retry-public-key
+# 2000-retry-public-key
 #
 # In the event that this host has existed before and is being recreated, the
 # salt master has an old version of the key on hand.

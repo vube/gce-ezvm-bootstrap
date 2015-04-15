@@ -27,6 +27,36 @@ BUILD_DIR=$(mktemp -d build.XXX)
 # Exit with a specific code after writing a message to STDERR
 fatal() { r=$1; shift; echo "FATAL ERROR: $@" 1>&2; exit $r; }
 
+# Get metadata about this instance and/or project, by path
+# Prints value to stdout so you should capture it like value=$(get_metadata "path")
+get_metadata() {
+	path="$1"
+
+	# Execute curl and it writes to stdout
+	# curl -s means no progress meter;
+	#      -f means fail silently (don't print content and exit non-zero)
+	curl -fs "http://metadata/computeMetadata/v1/instance/$path" \
+		-H "Metadata-Flavor: Google"
+
+    r=$?
+    case $r in
+        22) ;; # This is a 404 error, as in the $path doesn't exist; no problem. Return empty value.
+        0) ;; # Success we got the $path
+        *) echo "ERROR: Querying metadata [$path] (code=$r)" 1>&2 ;;
+    esac
+
+    exit $r
+}
+
+
+# Get metadata attribute about this instance and/or project, by key name
+# Prints value to stdout so you should capture it like value=$(get_metadata_attribute "key")
+get_metadata_attribute() {
+	key="$1"
+
+    get_metadata "attributes/$key"
+}
+
 # TODO- DEBIAN-SPECIFIC
 # Install a package
 package() {
@@ -66,9 +96,26 @@ install_ezvm() {
 	# Install dependencies before we can clone and execute anything
 	install_ezvm_dependencies
 
+    # Figure out what branch to install
+    branch=$(get_metadata_attribute "ezvm-branch")
+    r=$?
+    case $r in
+        22) branch="master" ;; # This is a 404 error, as in the metadata doesn't exist; no problem. Return empty value.
+        0) ;; # Success we got the metadata
+        *) fatal $? "Error querying ezvm-branch metadata" ;;
+    esac
+
 	# Clone to temp build path
 	sudo rm -rf "$EZVM" 2> /dev/null || fatal $r "Cannot clean up $EZVM before install"
 	git clone https://github.com/vube/ezvm || fatal $r "Clone ezvm failed"
+
+    # Check out the correct branch of ezvm
+    if [ "$branch" != "master" ]; then
+        echo "Checking out '$branch' branch"
+        cd ezvm || fatal $? "Cannot cd to ezvm"
+        git checkout "$branch" || fatal $? "Failed to 'git checkout $branch'"
+        cd .. || fatal $? "Cannot cd .."
+    fi
 
 	# Install to /usr/local/ezvm
 	echo "Installing ezvm"

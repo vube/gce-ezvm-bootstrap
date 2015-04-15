@@ -39,6 +39,6 @@ fi
 # If we need to fall back to a static copy for some reason, then do so.
 
 if [ $FALLBACK = 1 ]; then
-    echo "Info: Falling back to bundled bootstrap-salt.sh"
+    echo "Notice: Falling back to bundled bootstrap-salt.sh" 1>&2
     cp ../files/bootstrap-salt.sh $BUILD_DIR/bootstrap-salt.sh
 fi

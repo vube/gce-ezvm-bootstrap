@@ -13,6 +13,13 @@ fatal() { r=$1; shift; echo "FATAL ERROR: $@" 1>&2; exit $r; }
 BUILD_DIR="$EZVM_LOCAL_CONTENT_DIR/build"
 
 
+# Usage: debug_output "Some stuff" "to" "echo"
+debug_output() {
+    if [ ! -z "$DEBUG" ]; then
+        echo "DEBUG: $@" | sed -e 's,\n,\nDEBUG: ,'
+    fi
+}
+
 # Usage: url_encode "&weird characters/+here"
 url_encode() {
     str="$1"

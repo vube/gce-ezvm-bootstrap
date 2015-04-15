@@ -2,6 +2,10 @@
 #
 # 2098-saltutil-sync_all
 #
+# We explicitly call saltutil.sync_all so custom _grains get sync'd before
+# the first highstate.  This is documented as being required by salt whenever
+# there are custom _grains.
+#
 
 . "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
 
