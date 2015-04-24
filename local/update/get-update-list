@@ -106,6 +106,22 @@ if echo " $ezvm_updates " | grep ' salt\-master ' > /dev/null 2>&1; then
 fi
 
 
+list_update_files() {
+    d=$1
+    # Find all files in directory $d
+    # If this returns an invalid return code then it has failed and we need to die
+    tmpf="$(mktemp)"
+    find "$d" -maxdepth 1 -type f -print > "$tmpf"
+    r=$?
+    if [ $r = 0 ]; then
+        cat "$tmpf" \
+            | sort \
+            | xargs -n1 -i{} sh -c 'test -x {} || echo -n "# SKIP NON-EXECUTABLE: "; echo {}'
+    fi
+    rm -f "$tmpf"
+    [ $r = 0 ] || fatal $r "find failed to list files in directory: $(readlink -f "$(pwd)/$d")"
+}
+
 # List of update dirs must have associated setup routines
 for d in $ezvm_updates; do
     [ -d "./$d" ] || fatal 2 "Invalid ezvm-updates dir: $d"
@@ -113,7 +129,7 @@ done
 
 # First thing we do is anything that's truly global
 # DO NOT include get-update-list (this script) in the output
-find . -maxdepth 1 -type f -print | sort | grep -v "^$(basename $0)\$"
+list_update_files "." | sed -e "s,^\(\(\./\)\?$(basename $0)\)\$,# SKIP RESERVED FILE: \1,"
 
 # Only execute role-specific update procedure
 # They are listed in the "$dir/" sub-directory
@@ -121,5 +137,5 @@ find . -maxdepth 1 -type f -print | sort | grep -v "^$(basename $0)\$"
 # List these in the same order that they're specified in ezvm-updates
 #
 for d in $ezvm_updates; do
-    find "./$d" -type f -print | sort
+    list_update_files "./$d"
 done
