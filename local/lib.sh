@@ -48,6 +48,7 @@ get_metadata() {
     r=$?
     case $r in
         22) ;; # This is a 404 error, as in the $path doesn't exist; no problem.
+        6) ;; # Cannot resolve host; assume we're not running in GCE
         0) ;; # Success we got the $path
         *) echo "ERROR: Querying metadata [$path] (code=$r)" 1>&2 ;;
     esac

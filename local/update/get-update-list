@@ -19,6 +19,7 @@ is_gce=$(get_metadata "id")
 r=$?
 case $r in
     22) ;; # This is a 404 error, as in the metadata doesn't exist; no problem.
+    6) ;; # Couldn't resolve host; assume we're not running in GCE
     0) ;; # Success we got the metadata
     *) fatal $r "Error querying metadata (code=$r)" ;;
 esac
