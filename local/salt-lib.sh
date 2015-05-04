@@ -25,7 +25,8 @@ install_salt() {
     #
     flags="$flags -U -P"
 
-    sudo sh ../files/bootstrap-salt.sh $flags $extraFlags $version || fatal $? "bootstrap-salt.sh failed"
+    echo sh $BUILD_DIR/bootstrap-salt.sh $flags $extraFlags $version
+    sudo sh $BUILD_DIR/bootstrap-salt.sh $flags $extraFlags $version || fatal $? "bootstrap-salt.sh failed"
 }
 
 fix_salt_init_path() {
