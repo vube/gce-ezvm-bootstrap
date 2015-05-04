@@ -15,7 +15,12 @@
 
 . "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
 
-URL="https://raw.githubusercontent.com/xclusv/salt-bootstrap/xclusv/bootstrap-salt.sh"
+if [ ! -d $BUILD_DIR ]; then
+    install -d -m 0775 $BUILD_DIR || fatal 1 "Cannot make build dir: $BUILD_DIR"
+fi
+
+#URL="https://raw.githubusercontent.com/xclusv/salt-bootstrap/xclusv/bootstrap-salt.sh"
+URL="https://raw.githubusercontent.com/xclusv/salt-bootstrap/stable/bootstrap-salt.sh"
 CURL_OPTIONS="-L -f --connect-timeout 10"
 
 curl $CURL_OPTIONS $URL -o $BUILD_DIR/bootstrap-salt.sh
