@@ -10,7 +10,7 @@ install_salt() {
 
     # __SET_SALT_VERSION__ -- keep this comment so we can easily find where to set the salt version
 #    version="git v2014.7.0rc7"
-    version="git v2014.7.3"
+    version="git v2015.5.6"
 
     # Load the 'xclusv' branch of xclusv's salt repo, where Ross has changes pending
 #    flags="$flags -g https://github.com/xclusv/salt.git"
