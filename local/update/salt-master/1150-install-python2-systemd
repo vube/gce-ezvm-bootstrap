@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# 1150-install-python2-systemd
+#
+# Debian8 uses systemd by default and salt-master uses type=notify with systemd
+# so depends on python bindings for systemd. Debian8 removed the package for python2
+# bindings, encouraging projects to upgrade to python3 which salt is not yet
+# compatible with. So here we install the python2 bindings from source.
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+if [[ $(lsb_release -a 2> /dev/null | grep jessie) ]] ; then
+  install_package "libsystemd-dev"
+  install_package "libsystemd-journal-dev"
+  install_package "libsystemd-daemon-dev"
+  install_package "libsystemd-login-dev"
+  install_package "libsystemd-id128-dev"
+  install_package "gcc"
+  install_package "python-dev"
+
+  sudo rm -rf /tmp/python-systemd 2> /dev/null || fatal $? "Cannot clean up /tmp/python-systemd"
+  git clone https://github.com/systemd/python-systemd.git /tmp/python-systemd || fatal $? "Clone python-systemd failed"
+  cd /tmp/python-systemd || fatal $? "Cannot cd to /tmp/python-systemd"
+  git checkout "v230" || fatal $? "Failed to 'git checkout v230'"
+  make || fatal $? "make failed"
+  python2 setup.py install|| fatal $? "setup.py failed"
+fi

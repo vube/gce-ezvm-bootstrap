@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # 2000-install-salt-master
 #
@@ -13,5 +13,7 @@ MASTER_FLAGS="-M"
 
 install_salt "$MASTER_FLAGS"
 
-fix_salt_init_path "salt-master"
-fix_salt_init_path "salt-minion"  # Running a minion on the master as well
+if [[ -z $(lsb_release -a 2> /dev/null | grep jessie) ]] ; then
+  fix_salt_init_path "salt-master"
+  fix_salt_init_path "salt-minion"  # Running a minion on the master as well
+fi
