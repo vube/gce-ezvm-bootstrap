@@ -19,10 +19,6 @@ install_salt() {
     # Here we tell salt to fully Upgrade (-U) the system
     # and to use PIP (-P) to install dependencies.
     #
-    # This is required on Debian so we can get ZMQ 3.x which is required
-    # to have stable minions.  If/when ZMQ 3.x is backported to wheezy then
-    # we don't need to do this anymore.
-    #
     flags="$flags -U -P"
 
     log_msg 1 "EXEC: sh $BUILD_DIR/bootstrap-salt.sh $flags $extraFlags $version"
