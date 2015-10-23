@@ -2,16 +2,16 @@
 #
 # 1098-apt-set-default-release
 #
-# Set wheezy as the default release on this system.
+# Set jessie as the default release on this system.
 #
 
 . "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
 
 tmp="$(mktemp -t ezvm.XXXXXX)"
 
-# Set wheezy as the default release for this system
+# Set jessie as the default release for this system
 if [ ! -e /etc/apt/apt.conf ]; then
-    echo 'APT::Default-Release "wheezy";' > "$tmp"
+    echo 'APT::Default-Release "jessie";' > "$tmp"
     sudo install -o root -m 0644 "$tmp" /etc/apt/apt.conf || fatal $? "Cannot set default apt release"
     # Remember that we changed something
     echo "default release" >> "$BUILD_DIR/apt.changes"

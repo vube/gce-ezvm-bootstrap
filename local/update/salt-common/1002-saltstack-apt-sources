@@ -21,7 +21,7 @@ fi
 
 # Add jessie sources as an option
 if [ ! -f /etc/apt/sources.list.d/saltstack.list ]; then
-    echo "deb http://debian.saltstack.com/debian wheezy-saltstack main" > "$tmp"
+    echo "deb http://debian.saltstack.com/debian jessie main" > "$tmp"
     sudo install -o root -m 0644 "$tmp" /etc/apt/sources.list.d/saltstack.list || fatal $? "Cannot install saltstack apt sources"
     # Remember that we changed something
     echo "saltstack sources" >> "$BUILD_DIR/apt.changes"

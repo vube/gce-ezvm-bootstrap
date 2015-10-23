@@ -114,7 +114,7 @@ install_package() {
 	case "$catalog" in
 		backports)
 			echo "Installing backports package $package"
-			sudo DEBIAN_FRONTEND=noninteractive apt-get -t wheezy-backports install --yes --force-yes "$package" || fatal $r "Cannot install backports package $package"
+			sudo DEBIAN_FRONTEND=noninteractive apt-get -t jessie-backports install --yes --force-yes "$package" || fatal $r "Cannot install backports package $package"
 			;;
 		default)
 			echo "Installing package $package"
