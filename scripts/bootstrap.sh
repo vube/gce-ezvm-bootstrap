@@ -66,9 +66,6 @@ package() {
 	catalog="${2:-default}"
 
 	case "$catalog" in
-		backports)
-			sudo apt-get -t wheezy-backports install -y "$package" || fatal $r "Cannot install backports package $package"
-			;;
 		*)
 			sudo apt-get install -y "$package" || fatal $r "Cannot install package $package"
 			;;
@@ -79,7 +76,7 @@ package() {
 install_ezvm_dependencies() {
 
 	# Install packages we require BEFORE we can load and run ezvm
-	package "git" "backports"
+	package "git" ""
 }
 
 # Copy ezvm from cloud storage to local disk
