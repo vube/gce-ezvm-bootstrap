@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# 2199-consul-reset
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+if [ -f /etc/init.d/consul-template ]; then
+  sudo service consul-template stop
+  sudo service consul stop
+  sudo rm -rf /var/lib/consul/*
+  sudo service consul start
+  sleep 3
+  sudo service consul-template start
+fi
