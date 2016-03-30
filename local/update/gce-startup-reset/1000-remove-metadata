@@ -28,6 +28,6 @@ esac
 zone=$(echo "$zone_ident" | sed -e 's,.*/zones/,,' -e 's,/.*,,')
 
 instance=$(hostname)
-cmd="gcloud compute instances remove-metadata $instance --zone $zone --keys startup-script-url startup-script ezvm-updates"
+cmd="gcloud compute instances remove-metadata $instance --zone $zone --keys startup-script-url,startup-script,ezvm-updates"
 echo "$cmd"
 sudo $cmd || fatal $? "Failed to remove metadata on instance=$instance"

@@ -3,7 +3,7 @@
 # 2000-golive
 #
 
-if [ $(hostname | egrep -c "ls-(origin|edge|lodef|xq|xcode)-") -ne 0 ]; then
+if [ $(hostname | egrep -c "ls-(origin|edge|seg|lodef|xq|xcode)-") -ne 0 ]; then
   sudo touch /etc/atg/live
 fi
 

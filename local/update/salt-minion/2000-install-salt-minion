@@ -13,4 +13,6 @@ MINION_FLAGS=""
 
 install_salt "$MINION_FLAGS"
 
-fix_salt_init_path "salt-minion"
+if [[ -z $(lsb_release -a 2> /dev/null | grep jessie) ]] ; then
+  fix_salt_init_path "salt-minion"
+fi
