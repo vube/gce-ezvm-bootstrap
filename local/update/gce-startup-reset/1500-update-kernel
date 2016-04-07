@@ -5,4 +5,4 @@
 
 . "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
 
-install_package "linux-image-amd64" backports
+install_package "linux-image-amd64" backports force
