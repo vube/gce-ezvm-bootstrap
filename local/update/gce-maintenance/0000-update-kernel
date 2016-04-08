@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# 0000-update-kernel
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+# Update the kernel before doing much of anything else as docker, if nothing
+# else, pukes on a kernel upgrade after being installed and having containers
+# running
+
+if [ $(uname -r | cut -b1) -lt 4 ] ; then
+  install_package "linux-image-amd64" backports force
+  sudo reboot
+fi
