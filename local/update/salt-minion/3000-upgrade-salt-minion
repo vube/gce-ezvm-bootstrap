@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# 3000-upgrade-salt-minion
+#
+# Now that the salt minion is installed, upgrade it to get point releases.
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+salt-call pkg.install salt-minion refresh=True
