@@ -13,7 +13,7 @@
 tmp="$(mktemp -t ezvm.XXXXXX)"
 
 # First thing, import the saltstack PGP key
-if ! sudo apt-key list | grep 'joehealy@gmail.com' > /dev/null; then
+if ! sudo apt-key list | grep 'packaging@saltstack.com' > /dev/null; then
     cat ../files/saltstack.gpg | sudo apt-key add - || fatal $? "Cannot add saltstack.gpg to apt"
     # Remember that we changed something
     echo "saltstack.gpg" >> "$BUILD_DIR/apt.changes"
@@ -21,7 +21,7 @@ fi
 
 # Add jessie sources as an option
 if [ ! -f /etc/apt/sources.list.d/saltstack.list ]; then
-    echo "deb http://debian.saltstack.com/debian jessie-saltstack main" > "$tmp"
+    echo "deb http://repo.saltstack.com/apt/debian/8/amd64/latest jessie main" > "$tmp"
     sudo install -o root -m 0644 "$tmp" /etc/apt/sources.list.d/saltstack.list || fatal $? "Cannot install saltstack apt sources"
     # Remember that we changed something
     echo "saltstack sources" >> "$BUILD_DIR/apt.changes"
