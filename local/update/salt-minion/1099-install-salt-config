@@ -4,9 +4,6 @@
 #
 # If a custon salt configuration exists, install it.
 #
-# Do this before the salt master or minion is installed.  The install won't overwrite
-# an existing config, and this prevents us having to restart after installing.
-#
 
 MINION_CONFIG="$(dirname "$0")/../../files/etc-salt-minion"
 
@@ -15,4 +12,5 @@ MINION_CONFIG="$(dirname "$0")/../../files/etc-salt-minion"
 if [ -f "$MINION_CONFIG" ] ; then
   echo "Installing custom salt minion config"
   sudo cp "$MINION_CONFIG" /etc/salt/minion || exit $?
+  sudo systemctl restart salt-minion.service || exit $?
 fi

@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# 1000-install-salt-minion
+#
+# Install the minion.
+#
+
+. "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
+
+install_package "salt-minion"
