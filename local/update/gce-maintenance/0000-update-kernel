@@ -10,6 +10,17 @@
 # running
 
 if [ $(uname -r | cut -b1) -lt 4 ] ; then
-  install_package "linux-image-amd64" backports force
+  #install_package "linux-image-amd64" backports force
+
+  # Temporarily copy down the 4.4.0 kernel as there is a overlayfs bug between 4.4.1 and 4.5.2 and backports is currently on 4.5.0.
+  file1="linux-image-4.4.0-0.bpo.1-amd64_4.4.6-1~bpo8+1_amd64.deb"
+  file2="linux-image-amd64_4.4+71~bpo8+1_amd64.deb"
+
+  gsutil cp $(dirname "$GS_EZVM_LOCAL_ARCHIVE")/$file1 "$file1" || fatal $? "Failed to copy: $file1"
+  gsutil cp $(dirname "$GS_EZVM_LOCAL_ARCHIVE")/$file2 "$file2" || fatal $? "Failed to copy: $file2"
+
+  dpkg -i $file1 || fatal $? "Failed to dpkg: $file1"
+  dpkg -i $file2 || fatal $? "Failed to dpkg: $file2"
+
   sudo reboot
 fi
