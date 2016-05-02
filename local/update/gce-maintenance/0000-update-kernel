@@ -16,8 +16,8 @@ if [ $(uname -r | cut -b1) -lt 4 ] ; then
   file1="linux-image-4.4.0-0.bpo.1-amd64_4.4.6-1~bpo8+1_amd64.deb"
   file2="linux-image-amd64_4.4+71~bpo8+1_amd64.deb"
 
-  gsutil cp gs://caster-tv/$file1 /tmp/$file1 || fatal $? "Failed to copy: $file1"
-  gsutil cp gs://caster-tv/$file2 /tmp/$file2 || fatal $? "Failed to copy: $file2"
+  gsutil cp gs://naiadsys/$file1 /tmp/$file1 || fatal $? "Failed to copy: $file1"
+  gsutil cp gs://naiadsys/$file2 /tmp/$file2 || fatal $? "Failed to copy: $file2"
 
   dpkg -i /tmp/$file1 || fatal $? "Failed to dpkg: $file1"
   dpkg -i /tmp/$file2 || fatal $? "Failed to dpkg: $file2"
