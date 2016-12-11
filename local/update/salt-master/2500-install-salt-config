@@ -22,3 +22,6 @@ if [ -f "$MINION_CONFIG" ] ; then
   HOSTNAME=$(hostname -s) && perl -0pi -e "s/\n#id:\n/\nid: $HOSTNAME\n/" /etc/salt/minion
   sudo systemctl restart salt-minion.service || exit $?
 fi
+
+# Give the master and minion a few seconds to spin up before continuing
+sleep 5

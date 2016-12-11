@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# 2090-reset-minion-key
+# 2700-reset-minion-key
 #
 # Salt may have existed here before, who knows, in any case we're running on the
 # salt master server, so just delete our own minion key and let it resync.
@@ -11,7 +11,7 @@ IDENT=$(readlink -f $0)
 . "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
 
 if [ -f /etc/salt/minion_id ]; then
-  exec sudo salt-key -d $(cat /etc/salt/minion_id) -y
+  sudo salt-key -d $(cat /etc/salt/minion_id) -y
 fi
 
 exec sudo salt-key -a ls-salt -y
