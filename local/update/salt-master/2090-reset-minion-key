@@ -10,5 +10,8 @@ IDENT=$(readlink -f $0)
 
 . "$(dirname "$0")/../../lib.sh" || { echo "Cannot include ../../lib.sh" 1>&2; exit 1; }
 
+if [ -f /etc/salt/minion_id ]; then
+  exec sudo salt-key -d $(cat /etc/salt/minion_id) -y
+fi
 
-exec sudo salt-key -d $(cat /etc/salt/minion_id) -y
+exec sudo salt-key -a ls-salt -y
