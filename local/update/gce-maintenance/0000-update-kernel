@@ -10,6 +10,6 @@
 # running
 
 if [ $(uname -r | cut -b1) -lt 4 ] ; then
-  install_package "linux-image-amd64" backports force
+  install_package "linux-image-4.7.0-0.bpo.1-amd64" backports force
   sudo reboot
 fi
