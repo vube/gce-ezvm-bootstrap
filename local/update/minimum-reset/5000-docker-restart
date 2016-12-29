@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# 5000-docker-restart
+#
+
+if [ -f /usr/bin/docker ]; then
+  salt-call state.sls run.docker-restart
+fi

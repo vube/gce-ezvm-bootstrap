@@ -1,0 +1,7 @@
+#!/bin/sh
+#
+# 3000-state-highstate
+#
+
+salt-call saltutil.sync_all
+salt-call state.highstate

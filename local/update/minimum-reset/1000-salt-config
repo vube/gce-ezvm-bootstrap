@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# 1000-salt-config
+#
+
+HOSTNAME=$(hostname -s) && perl -0pi -e "s/\n#?id:[^\n]*\n/\nid: $HOSTNAME\n/" /etc/salt/minion
+systemctl restart salt-minion.service
+sleep 3

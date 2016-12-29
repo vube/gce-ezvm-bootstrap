@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# 2000-remove-whoami
+#
+
+if [ -f /usr/bin/gcloud ]; then
+  rm -f /etc/atg/whoami.json
+fi

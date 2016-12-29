@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# 1500-splunk-config
+#
+
+HOSTNAME=$(hostname -s)
+perl -0pi -e "s/\nserverName = [^\n]+/\nserverName = $HOSTNAME/" /opt/splunkforwarder/var/run/splunk/merged/server.conf
+perl -0pi -e "s/\nserverName = [^\n]+/\nserverName = $HOSTNAME/" /opt/splunkforwarder/etc/system/local/server.conf
+perl -0pi -e "s/\nhost = [^\n]+/\nhost = $HOSTNAME/" /opt/splunkforwarder/etc/system/local/inputs.conf
+systemctl restart splunkforwarder.service

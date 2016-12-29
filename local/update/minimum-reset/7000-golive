@@ -1,0 +1,6 @@
+#!/bin/sh
+#
+# 7000-golive
+#
+
+touch /etc/atg/live

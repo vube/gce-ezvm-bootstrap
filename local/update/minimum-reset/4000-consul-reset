@@ -1,0 +1,6 @@
+#!/bin/sh
+#
+# 4000-consul-reset
+#
+
+salt-call state.sls run.consul-reset

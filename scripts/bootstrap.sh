@@ -158,4 +158,5 @@ install_ezvm_local
 
 
 # Execute ezvm
+ezvm selfupdate || fatal 99 "ezvm selfupdate failed"
 ezvm update || fatal 99 "ezvm update failed"
