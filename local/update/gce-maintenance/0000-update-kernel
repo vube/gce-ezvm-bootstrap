@@ -8,9 +8,8 @@
 # Update the kernel before doing much of anything else as docker, if nothing
 # else, pukes on a kernel upgrade after being installed and having containers
 # running
-
 if [ $(uname -r | cut -b1) -lt 4 ] ; then
-  install_package "linux-headers-4.8.0-0.bpo.2-amd64" backports force
-  install_package "linux-image-4.8.0-0.bpo.2-amd64" backports force
+  install_package "linux-headers-4.9.0-0.bpo.2-amd64" backports force
+  install_package "linux-image-4.9.0-0.bpo.2-amd64" backports force
   sudo reboot
 fi
